@@ -496,12 +496,8 @@ public class Publisher {
         channel.basicPublish(EXCHANGE_NAME,"BLACK",null,"黑布林大狸子".getBytes());
         channel.basicPublish(EXCHANGE_NAME,"WHITE",null,"小白兔！".getBytes());
         System.out.println("消息成功发送！");
-
-
     }
-
 }
-
 ```
 
 #### 4.7 Topic
@@ -1326,7 +1322,7 @@ RabbitMQ的镜像模式
   
   | 执行命令                                                     |
   | :----------------------------------------------------------- |
-  | ![image-20240907172504202](/Users/zhengbufeng/Documents/学习笔记/RabbitMQ/录课-RabbitMQ.assets/image-20240907172504202.png) |
+  | ![image-20240907172504202](/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/RabbitMQ/录课-RabbitMQ.assets/image-20240907172504202.png) |
   
   准备完毕之后，启动两台RabbitMQ
   
@@ -1395,10 +1391,8 @@ import java.util.Map;
  * @description
  */
 public class Publisher {
-
     public static final String HEADER_EXCHANGE = "header_exchange";
     public static final String HEADER_QUEUE = "header_queue";
-
 
     @Test
     public void publish()throws  Exception{
@@ -1432,7 +1426,6 @@ public class Publisher {
         channel.basicPublish(HEADER_EXCHANGE,"",props,msg.getBytes());
 
         System.out.println("发送消息成功，header = " + headers);
-
     }
 }
 ```

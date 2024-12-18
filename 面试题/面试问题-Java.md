@@ -81,65 +81,53 @@ byte、short、int、long、float、double、boolean、char
 
 ### 5.1、为什么重写equals ，必须同时重写 hashCode？
 
-若hashCode不同，将直接判定Objects不同，跳过equals，加快了冲突处理效率。可能会存在两个相同的对象。
+这是因为`equals`和`hashCode`之间有一个重要的契约（即规则），它们的行为必须保持一致，具体原因如下：
 
-自定义的对象作为Map的键，那么必须要覆写hashCode 和equals。
+ 1. **`equals`和`hashCode`的关系：**
 
-1. 做了个实验，一个对象只重写了equals，然后将三个复制相同的对象存进hashSet中，最终hashSet大小为3！
+    **Java规定，如果两个对象通过`equals`方法判断相等（这个相等说的是对象相等），那么这两个对象的`hashCode`值也必须相等。**换句话说，当你重写了`equals`方法来定义对象相等的逻辑时，你必须确保`hashCode`方法根据相同的逻辑计算出相同的值。
 
-   原因：因为如果不重写hashCode方法，即使equals()相等也没意义，Object.hashCode() 的实现是默认为每一个对象生成不同的int 数值，他本身就是native 方法，一般与对象内存地址有关。从底层代码中也可知，hashCode 就是根据对象的地址进行相关计算得到int类型数值的。因为刚才对象没有重写hashCode，所以得到的是一个与对象地址相关的唯一值。
+ 2. **Hash-based Collections的工作原理：**
 
-2. 再举例：ArrayList<integer> 和 LinkedList<interger> ，然后各add(1)；判断 arrayList.equals(linkedList) 为true。
+    Java中的一些集合类，比如`HashSet`、`HashMap`、`Hashtable`等，依赖`hashCode`来快速查找对象。它们通过对象的`hashCode`值将对象分配到不同的桶中（比如哈希表）。如果你重写了`equals`方法，但没有同时重写`hashCode`方法，可能会导致以下问题：
 
-   原因： **ArrayList的 equals() 只进行了是否为List子类的判断**
+    - **哈希冲突问题：** 如果两个对象在`equals`方法中认为相等，但它们的`hashCode`值不同，那么它们将被放入哈希表的不同桶中，从而影响集合的正确性，导致查找、插入、删除操作出现异常。
+    - **错误的比较和存取：** 例如，在`HashSet`中，如果两个对象的`hashCode`不同，即使它们通过`equals`方法判断是相等的，集合也会认为它们是不同的对象，导致相同的元素多次添加或无法找到。
 
-
-
-```java
-public class Student {
-    private String username;
-    private String password;
-    private Integer age;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Student student = (Student) o;
-        return Objects.equals(username, student.username) &&
-                Objects.equals(password, student.password) &&
-                Objects.equals(age, student.age);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(username, password, age);
-    }
-}
-```
+  3. **`hashCode`的合同：**
+     - **相等对象的哈希码必须相等：** 如果两个对象通过`equals`方法比较返回`true`，那么它们的`hashCode`值也必须相等。
+     - **不相等对象的哈希码不一定要不同：** 即使两个对象通过`equals`方法比较返回`false`，它们的`hashCode`值也可以相同，只是不同的`hashCodße`值能更好地减少哈希冲突，提升性能。
 
 
 
-
-
-## 6、hashCode方法的作用
-
-- 对象使用 hashcode方法 可生成哈希值。这个方法通常跟 equals 配合着使用，因为计算出的哈希值会存在冲突的情况，所以当 hashCode 相同时，还需要在调用 equals 进行一次值得比较。但是，上题答案
-
-  **Object 类定义中对 hashCode 和 equals 要求如下：**
-
-  1. 如果两对象的euqals 的结果相等，那么两个对象的hashCode的返回结果也必须相同的。
-  2. 任何时候重写equals ，都必须同时重写 hashCode。
+其实就是一句话，equals无法独立判断两个对象是否相同，他只能判断内部的值是否一样，最后还是需要压轴hashCode来确认下
 
 
 
-### 6.1、关于哈希码的相关知识点
+### 5.2、为什么不能仅依赖`hashCode`判断
+
+`hashCode`的主要目的是优化存储和查找，而不是判断对象是否相等。`hashCode`值相同并不意味着两个对象的内容一定相等，因为哈希冲突是常见的。
+
+- **哈希冲突：** 不同的对象可能会生成相同的哈希值（即碰撞）。例如，如果两个对象的`hashCode`返回相同的值，哈希表需要进一步通过`equals`方法来确定它们是否确实相等。否则，哈希表可能会误认为两个对象是相同的。
+
+  ```java
+  // 假设有两个不同的对象，它们的内容不同
+  Person p1 = new Person("Alice", 25);
+  Person p2 = new Person("Bob", 30);
+  
+  System.out.println(p1.hashCode() == p2.hashCode()); // 可能返回true（假设哈希值相同，但内容不同）hash冲突
+  System.out.println(p1.equals(p2)); // 结果是false，因为它们的内容不同
+  ```
+
+- **`hashCode`只能提供“相等”的可能性，但`equals`才能决定是否真正相等。** 如果你只依赖`hashCode`，你可能错过那些内容相同但`hashCode`不同的对象（这虽然是非常少见的情况，但理论上是可能的）。例如，两个对象的`hashCode`相同，但如果它们在其他字段上有不同的内容，`equals`才会识别出它们并返回`false`。
+
+## 6、关于哈希码的相关知识点
 
 - 解决冲突的方法：
 
   1. 开放式地址法
 
-     - 线性探索再散列
+     - **线性探索再散列**
 
        例：用线性探测再散列实现 14、5、21、16、17、15，在0 ~ 10的存储空间中的存放散列函数为H~(key)~=key%9。
 
@@ -155,13 +143,13 @@ public class Student {
 
        - H~(15)~=15%9=6(冲突)则(6+1)%11=7
 
-     - 二次探索再散列
+     - **二次探索再散列**
 
        遇上差不多，只是平方了
 
        d~1~ = H~(key)~ 	d~i~ = (d~1~ + i^2^) % m 	i = 1,2,3... 
 
-     - 随机探索再散列
+     - **随机探索再散列**
 
        d~1~ = H~(key)~  	d~i~=(d~1~+R)%m		R是给定的随机数
 
@@ -204,7 +192,7 @@ public class Student {
 
   他们的底层都是可变的字符数组，所以在进行频繁的字符串操作时，建议使用这两个。
 
-  StringBuffer对方法添加了同步锁所以线程安全、StringBuilder没有线程不安全
+  **StringBuffer对方法添加了同步锁所以线程安全、StringBuilder没有线程不安全**
 
 ### 7.1、如何让字符串反转？
 
@@ -215,8 +203,6 @@ String str = "abcde";
 StringBuilder builder = new StringBuilder(str);
 String ret = builder.reverse().toString();
 ```
-
-
 
 
 
@@ -273,6 +259,8 @@ String ret = builder.reverse().toString();
 
 
 ### 怎么排序
+
+Collections内有个排序的api
 
 
 
@@ -384,11 +372,11 @@ private void inflateTable(int toSize) {
 
 ### 9.1、红黑树
 
-- 源码得知新插入的节点一律赋为红色
-- 不能有两个红色的节点
+- **根节点必须是黑色**。
 
-* 每个节点必须是红色或者黑色。
-* **根节点必须是黑色**。
+- 新插入的节点一律为红色
+- 不能同时有两个红色的节点
+
 * 如果当前节点是红色，子节点必须是黑色
 * 所有叶子节点都是黑色。
 * 从任意节点到每个叶子节点的路径中，黑色节点的数量是相同的。
@@ -427,28 +415,16 @@ private void inflateTable(int toSize) {
 
    不过都同时实现了Map、Cloneable、Serializable这三个接口
 
-2. 对外提供的接口不同
-
-3. 对null的支持不同
-
-   HashTabe：key和value都不能为空
-
-   HashMap：key可以为空，但为确保唯一性只能一个；值可以多个为空。根据实现类约束为准。
-
-4. 安全性不同
-
-   HashMap线程不安全，在多线程并发的环境下，可能会产生死锁、扩容数据丢失等问题。
-
-   HashTable是线程安全，每个方法都加了synchronized关键字。
-
-   - 虽然HashMap是线程不安全的，但是它的效率远远高于Hashtable，这样设计是合理的，因为大部分的 使用场景都是单线程。
-   - ConcurrentHashMap也线程安全，效率比HashTable高很多倍，采用了分段锁，并不对整个数据进行锁定。
-
-5. 初始容量大小和每次扩容大小不同
-
-6. 计算hash值的方法不同
-
-
+| 特性               | **HashMap**                          | **Hashtable**                                   |
+| ------------------ | ------------------------------------ | ----------------------------------------------- |
+| **线程安全性**     | 不是线程安全的，需要外部同步控制     | 线程安全的，内部使用同步机制（synchronized）    |
+| **null 键和值**    | 允许一个 `null` 键和多个 `null` 值   | 不允许 `null` 键或 `null` 值                    |
+| **性能**           | 性能较高，因为没有同步开销           | 性能较低，因为每个操作都需要同步                |
+| **实现接口**       | 实现了 `Map` 接口                    | 继承自 `Dictionary` 类，且实现了 `Map` 接口     |
+| **迭代器**         | 使用 `Iterator` 进行遍历，不保证顺序 | 使用 `Enumerator` 进行遍历，不保证顺序          |
+| **操作方式**       | 常用于非线程安全的场景，如单线程应用 | 适合多线程环境，但已被 `ConcurrentHashMap` 替代 |
+| **初始容量和扩容** | 默认初始容量为 16，负载因子为 0.75   | 默认初始容量为 11，负载因子为 0.75              |
+| **出现时间**       | Java 1.2 引入，作为集合框架的一部分  | Java 1.0 引入，作为旧版类的一部分               |
 
 
 
@@ -463,7 +439,8 @@ private void inflateTable(int toSize) {
 ## 13、Collection、Collections的区别
 
 - Collection是集合类的上级接口
-- Collections是集合类的一个工具类，它包含有各种有关集合操作的静态多态方法，用于实现对各种集 合的搜索、排序、线程安全化等操作。此类不能实例化，就像一个工具类，服务于Java的Collection框 架。 
+- Collections是集合类的一个工具类，它包含有各种有关集合操作的静态多态方法，
+  用于实现对各种集 合的搜索、排序、线程安全化等操作。此类不能实例化，就像一个工具类，服务于Java的Collection框架。 
 
 
 
@@ -475,7 +452,7 @@ private void inflateTable(int toSize) {
 
 - 强引用 Strong Reference：最为常见，比如new一个对象，这样的变量声明和定义就会产生对该对象的强引用。只要求强引用指向，并且 GC Roots 可达，那么 Java 内存回收时，即使濒临内存耗尽，也不会回收该对象。
 
-- 软引用 Soft Reference：用SoftReference类实现，一般不会轻易回收，只有内存不够OOM之前才会回收。主要是用来缓存服务器中间计算结果及不需要实时保存的用户行为。例：
+- 软引用 Soft Reference：用SoftReference类实现，一般不会轻易回收，只有内存不够OOM之前才会回收。主要是用来缓存服务器中间计算结果和不需要实时保存的用户行为。例：
 
   ```java
   // wrf这个引用是强引用，它是指向SoftReference这个对象的， 
@@ -501,9 +478,16 @@ private void inflateTable(int toSize) {
 
 
 
-### 14.1 GC Roots 有哪些
+### 14.1 GC Roots 都有哪些
 
-
+| **GC Roots 类型**                | **说明**                                                     |
+| -------------------------------- | ------------------------------------------------------------ |
+| **虚拟机栈（栈帧中的局部变量）** | 方法调用过程中，栈帧中的局部变量表保存的对象引用，作为根对象。通常指当前线程的栈中的局部变量。 |
+| **方法区中的类静态变量**         | 静态变量在方法区中存储，在类加载时就存在，不会被销毁，除非类卸载。 |
+| **方法区中的常量**               | 存储在方法区常量池中的常量引用，比如字符串常量池中的对象。   |
+| **当前线程**                     | 当前运行的线程对象是 GC Roots 之一，因为它是直接与执行过程相关的对象。 |
+| **JNI 引用（Native 方法）**      | 本地方法（通过 JNI 调用的）中持有的引用（例如 C++ 等本地代码中保存的引用）。 |
+| **Java 虚拟机内部数据结构**      | Java 虚拟机内部所维护的某些对象引用，例如线程管理、垃圾回收等相关的内部对象。 |
 
 
 
@@ -511,7 +495,7 @@ private void inflateTable(int toSize) {
 
 泛型是Java SE 1.5之后的特性，着编写的代码可以被不同类型的对象所重用。
 
-1. `<? extends T>`：
+1. `<? extends T>`：添加限制
 
    它可以赋值任何 **T 以及 T 的子类**集合，T 则为最高界限。
 
@@ -521,22 +505,39 @@ private void inflateTable(int toSize) {
 
    - 除 null 外，**任何元素都不能添加进< ? extends T > 集合内。**
 
-2. `<? super T>`：
+2. `<? super T>`：读取限制
 
    它可以赋值给任何 **T 以及 T 的父类**集合，Ｔ为最底界限。
 
    注意：
 
-   - **从中读取数据会造泛型丢失。**
+   - **从中读取数据会造泛型丢失（Object）。**
 
 
 
 ## 16、Java创建对象有几种方式
 
-- new 创建新对象
-- 通过反射机制
-- 采用clone机制
-- 通过序列化机制
+```java
+// 1. new 关键字（最常见方式）
+// 2. Class.forName() 反射方式
+Class<?> cls = Class.forName("com.example.MyClass");
+Object obj = cls.getDeclaredConstructor().newInstance();
+// 3. clone() 方法（复制对象）
+MyClass obj1 = new MyClass();
+MyClass obj2 = (MyClass) obj1.clone();
+// 4. 反序列化恢复对象
+ObjectInputStream in = new ObjectInputStream(new FileInputStream("object.ser"));
+MyClass obj = (MyClass) in.readObject();
+// 5. 工厂方法模式
+MyClass obj = MyClassFactory.createMyClass();
+// 6. Optional.of()（包装对象）
+Optional<MyClass> optional = Optional.of(new MyClass());
+// 7. enum 类型（自动创建单例对象）
+public enum MyEnum {
+    INSTANCE;
+}
+MyEnum obj = MyEnum.INSTANCE;
+```
 
 
 
@@ -546,10 +547,10 @@ private void inflateTable(int toSize) {
 
 1. 实现Cloneable接口，重写clone方法；
 2. 实现Serializable接口，通过对象的序列化和反序列化实现克隆，可以实现真正的深克隆。
-3. BeanUtils，apache和Spring都提供了bean工具，只是这都是浅克隆。
+3. BeanUtils，apache和Spring都提供了bean工具，只是这都是浅克隆。**常用工具基本是浅克隆**
 
 - 浅拷贝：仅仅克隆基本类型变量，**不克隆引用类型变量**；
-- 深克隆：既克隆基本类型变量，**又克隆引用类型变量**；
+- 深克隆：既克隆基本类型变量，**有克隆引用类型变量**；
 
 
 
@@ -623,14 +624,14 @@ Java可抛出(Throwable)的结构分为三种类型：被检查的异常(Checked
    
    常见5种运行时异常：
    
-   - 数组越界		    IndexOutOfBoundsException
+   - 数组越界	      IndexOutOfBoundsException
    
    - fail-fast机制产生的   ConcurrentModificationException
    
      java.util下的所有集合类都是fail-fast，而concurrent 包中的集合类都是fail-safe。
      与fail-fast不同，fail-safe 是对遍历时频繁被修改的集合进行快照，那么再修改就无关。
    
-   - 空指针异常                NullPointerException
+   - 空指针异常            NullPointerException
 
 
 
@@ -793,6 +794,8 @@ Java 中 IO 流分为几种?
 
 - OutputStream/Writer: 所有输出流的基类，前者是字节输出流，后者是字符输出流
 
+需要派生知识点。
+
 
 
 
@@ -912,10 +915,10 @@ private static final Object PRESENT = new Object();
 
 ## 30、关于对象创建的大小
 
-refvar (Reference Variable)在面向对象世界中称为引用变量，或者叫引用句柄。是基本数据类型，默认值null
+`refvar` (Reference Variable)在面向对象世界中称为**引用变量**，或者叫引用句柄。`是基本数据类型，默认值null`
 把引用对象指向 实际对象 (Refered Object) 简称refobj。
 
-无论refobj是多么小的对象，最小占用的存储空间是12B（用于存储基本信息，称为对象头），但由于存储空间分配必须是8B的倍数，所以初始分配的空间至少是16B
+无论refobj是多么小的对象，最小占用的存储空间是**12B**（用于存储基本信息，称为对象头），但由于存储空间分配必须是8B的倍数，所以初始分配的空间至少是16B
 
 一个refvar最多只能存储一个refobj的首地址，一个refobj可以被多个refvar存储下他的首地址，也就是一个堆内对象可以被多个refvar引用指向。如果一个refobj没有被任何refvar指向，那么迟早要被垃圾回收。而refvar的释放与其他基本数据类型类似。
 
@@ -963,13 +966,13 @@ Integer 的实例成员只有一个private int value，占用4个字节，加上
 
 存储内容包括：
 
-- 对象标记（markOop）
+- 对象标记（**markOop**）
 
-  对象标记存储对象本身运行时的数据，哈希码、GC标记信息（三色标记算法信息）、锁信息（01，00，10，11，01）、线程关联信息等，这部分数据在64为JVM上占用8字节=64位，称为“Mark Word”。注意：为了存储更多状态信息，对象标记的存储格式是非固定的（具体与JVM实现有关）。
+  对象标记存储对象本身运行时的数据，`哈希码、GC标记信息（三色标记算法信息）、锁信息（01，00，10，11，01）、线程关联信息等`，这部分数据在64为JVM上占用8字节=64位，称为“Mark Word”。注意：为了存储更多状态信息，对象标记的存储格式是非固定的（具体与JVM实现有关）。
 
   细：当一个对象计算过 indentityHashCode 后，则无法进入到偏向锁。因为直接标记占用那25位地方，这样偏向的标识就无法标识。
 
-- 类元信息（klassOop）
+- 类元信息（**klassOop**）
 
   存储的是对象指向它的类元数据（Klass）的首地址，占用4B，与refvar开销一致。指向的是对应类的.Class
 
@@ -1115,7 +1118,7 @@ Integer 的实例成员只有一个private int value，占用4个字节，加上
 
 
 - 本地方法栈
-  - 为Native方法服务
+  - **为Native方法服务**
   - 线程开始调用本地方法时，会进入一个不在受JVM约束的区域。
   - 本地方法可以通过JNI（Java Native Interface）来访问虚拟机运行时的数据区，甚至可以调用寄存器，具有和JVM相同的能力和权限。
   - 如果大量的本地方法出现时，势必会削弱JVM对系统的控制力，因为它的出错信息都比较黑盒。
@@ -1249,7 +1252,7 @@ cafe babe 0000 0034  0014
 
 - 现在有两个变量 a和b 要被提交。
 - a和b 在被提交前放在同一小块内存中，也就是64个byte，进行提交。
-- 这时候只想要 a 变量的 cpu 的那一条线程中内存 b 被修改了，那么这一块内存就被标为 Invalid，那么这一块内存就不得不回去重读一下获取新的值。但是 b 的修改与只想要 a 变量的 cpu 无关，这么一来就浪费时间了。
+- 这时候将 a 变量的 cpu 的那一条线程中内存 b 被修改了，那么这一块内存就被标为 Invalid，那么这一块内存就不得不回去重读一下获取新的值。但是 b 的修改与 a 变量的 cpu 无关，这么一来就浪费时间了。
 
 改进方法：
 
@@ -1282,7 +1285,7 @@ long p1, p2, p3, p4, p5, p6, p7;
             8		   1	 0		 obj	Ljava/lang/Object
   ```
 
-- NEW：如果找不到Class对象，则进行类加载。加载成功后，则在队中分配内存，从Object开始到本类路径上的所有属性值都要分配内存。==在分配过程中，注意引用是占据存储空间的，他是一个变量，占用4个字节。==
+- NEW：如果找不到Class对象，则进行类加载。加载成功后，则在队中分配内存，从Object开始到本类路径上的所有属性值都要分配内存。==在分配过程中，注意 引用是占据存储空间的，他是一个变量，占用4个字节。==
 
   ```
   refvar(Reference Variable)在面向对象世界中称为引用变量，或者叫引用句柄。是基本数据类型，默认值null
@@ -1560,7 +1563,7 @@ Callable（简单）与Runnable的区别：
 
 1. 可以有返回值 
 2. 可以抛出异常
-3. 方法不同，run()/  call()
+3. 方法不同，run()/call()
 
 所以用Callable要好
 
@@ -1597,7 +1600,7 @@ Callable 不认识Thread 则通过Runnable
 
 如何关闭一个线程？不要关闭线程，关闭线程的概念已经被否定了。所以就直接让它正常运行完就行。
 
-1. 使用退出标志，使线程正常退出，也就是当run方法完成后线程终止。
+1. 使用退出标志 flag ，使线程正常退出，也就是需要达到退出的条件的时候设置为 false即可。
 2. 使用stop方法强行终止，但是**不推荐**这个方法，因为stop和suspend及resume一样都是过期作废的 方法。
 3. 使用interrupt方法中断线程，使用会抛出异常。暂没见过用来控制业务逻辑的
 
@@ -1617,7 +1620,7 @@ Callable 不认识Thread 则通过Runnable
 
 **1、来自不同的类** 
 
-wait => Object
+wait  => Object
 sleep => Thread 
 
 在公司中一般都不用，用TimeUtil，在JUC包中
@@ -1630,12 +1633,12 @@ sleep => Thread
 
 **3、使用的范围是不同的** 
 
-wait：必须在Synchronize同步代码块中
+wait： 必须在Synchronize同步代码块中
 
 sleep：任何地方都可以
 
 **4、是否需要捕获异常**
-wait   不需要捕获异常 
+wait  不需要捕获异常 
 
 sleep 必须要捕获异常 
 
@@ -1644,6 +1647,8 @@ sleep 必须要捕获异常
 
 
 ## 5、volatile 是什么?
+
+**保证可见性、有序性**
 
 计算机并不会根据代码顺序按部就班地执行相关指令。
 
@@ -1656,8 +1661,6 @@ StoreStroeBarrier		LoadLoadBarrier
 	volatile 写			  volatile 读
 StoreLoadBarrier		LoadStoreBarrier
 ```
-
-
 
 volatile修饰之后，那么就具备了两层语义：
 
@@ -1752,11 +1755,13 @@ start()方法被用来启动新创建的线程，而且start()内部调用了run
            // 总数是6，必须要执行任务的时候，再使用！        
            CountDownLatch countDownLatch = new CountDownLatch(6);
            for (int i = 1; i <=6 ; i++) {            
-               new Thread(()->{                							  		 					System.out.println(Thread.currentThread().getName()+" Go out");       				  countDownLatch.countDown(); // 数量-1            
-            },String.valueOf(i)).start();        }
+               new Thread(()->{                							  		 					
+                   System.out.println(Thread.currentThread().getName()+" Go out");       				  
+                   countDownLatch.countDown(); // 数量-1            
+            	}, String.valueOf(i)).start();        
+           }
            
            countDownLatch.await(); // 等待计数器归零，然后再向下执行
-           
            System.out.println("Close Door");
        } 
    }
@@ -1771,17 +1776,16 @@ start()方法被用来启动新创建的线程，而且start()内部调用了run
 2. CyclicBarrier  加法计数器
 
    ```java
-   CyclicBarrier cyclicBarrier = new CyclicBarrier(7,()->{         
+   CyclicBarrier cyclicBarrier = new CyclicBarrier(7, ()->{         
        System.out.println("召唤神龙成功！"); 
    });                                                     
-   // 等待数字到7的时候才激活                                                       
-   cyclicBarrier.await();    
-   // 激活后才会执行“召唤神龙”                                                        
+   // 等待数字累加到7的时候才激活执行线程                                                       
+   cyclicBarrier.await();                                                            
    ```
-
    
-
-3. Semmaphore：一个计数信号量。在概念上信号量维持一组许可证。如果有必要，每个acquire()都会阻塞，知道许可证可用，然后才能使用。
+   
+   
+3. Semaphore：一个计数信号量。在概念上信号量维持一组许可证。如果有必要，每个acquire()都会阻塞，知道许可证可用，然后才能使用。
 
    在并发用的非常的多
 
@@ -1793,7 +1797,7 @@ start()方法被用来启动新创建的线程，而且start()内部调用了run
            // 线程数量：停车位! 限流！
            Semaphore semaphore = new Semaphore(3);
            for (int i = 1; i <=6 ; i++) {
-               new Thread(()->{
+               new Thread(() -> {
                    // acquire() 得到
                    try {
                        semaphore.acquire();
@@ -1812,9 +1816,26 @@ start()方法被用来启动新创建的线程，而且start()内部调用了run
    }
    ```
 
+   ```
+   2抢到车位
+   3抢到车位
+   1抢到车位
+   -----------两秒
+   2离开车位
+   1离开车位
+   3离开车位
+   4抢到车位
+   5抢到车位
+   6抢到车位
+   -----------两秒
+   4离开车位
+   5离开车位
+   6离开车位
+   ```
+   
    原理：
    `semaphore.acquire(); `获得，假设如果已经满了，则等待，等待有线程被释放
-
+   
    `semaphore.release(); `释放，会将当前的信号量释放 + 1，然后唤醒等待的线程
    作用： 多个共享资源互斥的使用！并发限流，控制大的线程数！
    
@@ -1867,13 +1888,17 @@ readWriteLock.readLock().unlock();
 
  `ArrayBlockingQueue blockingQueue = new ArrayBlockingQueue<>(3);`
 
-| 方式         | 抛出异常 | 有返回值，不抛出异常 | 阻塞 等待 | 超时等待    |
-| ------------ | -------- | -------------------- | --------- | ----------- |
-| 添加         | add      | oﬀer()               | put()     | oﬀer( , , ) |
-| 移除         | remove   | poll()               | take()    | poll( , )   |
-| 检测队首元素 | element  | peek                 | -         | -           |
+| 方式         | 抛出异常 | 返回true/false，不抛出异常 | 阻塞 等待 | 时间范围内等待，再返回值 |
+| ------------ | -------- | -------------------------- | --------- | ------------------------ |
+| 添加         | add      | oﬀer()                     | put()     | oﬀer( , , )              |
+| 移除         | remove   | poll()                     | take()    | poll( , )                |
+| 检测队首元素 | element  | peek                       | -         | -                        |
 
+LinkedList
 
+Propertis
+
+Delay
 
 SynchronousQueue 同步队列
 
@@ -1896,11 +1921,11 @@ SynchronousQueue 同步队列
 ExecutorService threadPool = Executors.newSingleThreadExecutor();	
 // 创建一个固定的线程池的大小 
 ExecutorService threadPool = Executors.newFixedThreadPool(5); 
-// 可伸缩的，遇强则强，遇弱则弱，依赖于操作系统能够创建的大线程大小
+// 可伸缩的，依赖于操作系统能够创建的大线程大小
 ExecutorService threadPool = Executors.newCachedThreadPool(); 	
-// 与上相同，线程池支持定时以及周期性执行任务的需求。 
+// 支持定时以及周期性执行任务的需求。 
 ExecutorService threadPool = Executors.newScheduledThreadPool();
-// JDK8引入，创建持有足够线程的线程池支持给定的并行度，并使用多个对象减少竞争。
+// JDK8引入，创建持有足够线程的线程池支持给定的并行度，并使用多个对象减少竞争。ForkJoin 
 ExecutorService threadPool = Executors.newWorkStealingPool();
  
 // 关闭线程
@@ -1941,9 +1966,9 @@ public ThreadPoolExecutor(int corePoolSize,			// 核心线程池大小
 > 四大拒绝策略
 
 ```java
-new ThreadPoolExecutor.AbortPolicy() // 银行满了还有人进来，不处理这个人的，抛出异常 
-new ThreadPoolExecutor.CallerRunsPolicy() // 哪来的回哪去！ 
-new ThreadPoolExecutor.DiscardPolicy() //队列满了，丢掉任务，不会抛出异常！ 
+new ThreadPoolExecutor.AbortPolicy() 		// 满了不处理并抛出异常 
+new ThreadPoolExecutor.CallerRunsPolicy() 	// 哪来的回哪去！ 
+new ThreadPoolExecutor.DiscardPolicy() 		// 队列满了，丢掉任务，不会抛出异常！ 
 new ThreadPoolExecutor.DiscardOldestPolicy() //队列满了，尝试去和早的竞争，也不会抛出异常！ 
 ```
 
@@ -1993,11 +2018,11 @@ new ThreadPoolExecutor.DiscardOldestPolicy() //队列满了，尝试去和早的
 
 interrupted() 和 isInterrupted()的主要区别是前者会将中断状态清除而后者不会。
 
-Java多线程的中断机 制是用内部标识来实现的，调用Thread.interrupt()来中断一个线程就会设置中断标识为true。
+Java多线程的中断机制是用内部标识来实现的，调用Thread.interrupt()来中断一个线程就会设置中断标识为true。
 
-当中断线程调用静态方法Thread.interrupted()来检查中断状态时，中断状态会被清零。
+当中断线程调用静态方法Thread.interrupted()来检查中断状态时，**中断状态会被清零**。
 
-而非静态方法 isInterrupted()用来查询其它线程的中断状态，且不会改变中断状态标识。
+而非静态方法 isInterrupted()用来查询其它线程的中断状态，且**不会改变中断状态**标识。
 
 
 
@@ -2007,7 +2032,7 @@ Java多线程的中断机 制是用内部标识来实现的，调用Thread.inter
 
 synchronized关键字解决的是多个线程之间访问资源的同步性，它可以保证被它修饰的方法或者代码块在任意时刻只能有一个线程执行。 
 
-在 Java 早期1.2版本中，synchronized属于重量级锁，效率低，因为监视器锁（monitor）是依赖于底层的操作系统的 Mutex Lock 来实现的，Java 的线程是映射到操作系统的原生线程之上的。如果要挂起或者唤醒一个线程，都需要操作系统OS帮忙完成。而操作系统实现线程之间的切换时需要从用户态转换到内核状态，这个状态之间的转换需要较长的时间，时间成本相对较高，这也是为什么早期的 synchronized 效率低的原因。
+在 Java 早期1.2版本中，synchronized属于重量级锁，效率低，因为监视器锁（monitor）是依赖于底层的操作系统的 Mutex Lock 来实现的，Java 的线程是映射到操作系统的原生线程之上的。如果要挂起或者唤醒一个线程，都需要操作系统OS帮忙完成。而操作系统实现线程之间的切换时需要从**用户态转换到内核状态**，这个状态之间的转换需要较长的时间，时间成本相对较高，这也是为什么早期的 synchronized 效率低的原因。
 
 在 JDK6 后不断优化是的 synchronized 提供三种锁的实现，包括偏向锁、轻量级锁、重量级锁，还提供自动的升级和降级机制。
 
@@ -2122,9 +2147,9 @@ synchronized关键字解决的是多个线程之间访问资源的同步性，�
 
 ## 19、Thread类中的yield方法有什么作用？
 
-- yield方法可以暂停当前正在执行的线程对象，让其它有相同优先级的线程执行。
+- yield方法可以暂停当前正在执行的线程对象，**让其它有相同优先级的线程执行**。
 
-- 它是一个静态方法，只保证当前线程放弃CPU占用而不能保证使其它线程一定能占用CPU，执行yield()的线程有可能在进入到暂停状态后马上又被执行，因为没有优先级高的线程执行。
+- 它是一个静态方法，只保证当前线程放弃CPU占用而**不能保证使其它线程一定能占用CPU**，执行yield()的线程有可能在进入到暂停状态后马上又被执行，因为没有优先级高的线程执行。
 
 
 
@@ -2162,7 +2187,221 @@ CAS ： 比较当前工作内存中的值和主内存中的值，如果这个值
 
 缺点：
 1、 循环会耗时
-2、一次性只能保证一个共享变量的原子性3、ABA问题
+2、一次性只能保证一个共享变量的原子性3、**ABA问题**
 
  
 
+
+
+
+
+
+
+
+
+# Collections 工具类API
+
+## 1. 排序和查找相关方法
+
+- **sort(List<T> list)**
+
+​	* 用于对 List 进行升序排序。排序是基于 List 元素的自然顺序（即 Comparable 接口的实现）。示例：
+
+```java
+List<Integer> list = Arrays.asList(4, 2, 5, 1, 3);
+Collections.sort(list); // 排序
+System.out.println(list); // 输出: [1, 2, 3, 4, 5]
+```
+
+* **sort(List<T> list, Comparator<? super T> c)**
+
+​	* 用于根据自定义的 Comparator 对 List 进行排序。
+
+​	* 示例：
+
+```java
+List<String> list = Arrays.asList("apple", "banana", "cherry");
+Collections.sort(list, (a, b) -> b.compareTo(a)); // 按降序排序
+System.out.println(list); // 输出: [cherry, banana, apple]
+```
+
+- **binarySearch(List<? extends Comparable<? super T>> list, T key)**
+
+​	* 在已排序的 List 中使用二分查找来查找元素。
+
+​	* 示例：
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
+int index = Collections.binarySearch(list, 3);
+System.out.println(index); // 输出: 2
+```
+
+- **shuffle(List<?> list)**
+
+​	* 随机打乱 List 中的元素顺序。
+
+​	* 示例：
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
+Collections.shuffle(list);
+System.out.println(list); // 输出顺序可能不同
+```
+
+- **reverse(List<?> list)**
+
+​	* 反转 List 中元素的顺序。
+
+​	* 示例：
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
+Collections.reverse(list);
+System.out.println(list); // 输出: [5, 4, 3, 2, 1]
+```
+
+## **2.** **线程安全相关方法**
+
+- **synchronizedList(List<T> list)**
+
+​	* 返回一个线程安全的 List，即对原始 List 的所有操作都被同步。
+
+​	* 示例：
+
+```java
+List<Integer> list = new ArrayList<>();
+List<Integer> syncList = Collections.synchronizedList(list);
+```
+
+- **synchronizedSet(Set<T> s)**
+
+​	* 返回一个线程安全的 Set。
+
+- **synchronizedMap(Map<K, V> m)**
+
+​	* 返回一个线程安全的 Map。
+
+## **3.** **常量和空集合**
+
+- **emptyList()**
+
+​	* 返回一个空的不可修改的 List。
+
+​	* 示例：
+
+```java
+List<String> emptyList = Collections.emptyList();
+```
+
+- **emptySet()**
+
+​	* 返回一个空的不可修改的 Set。
+
+​	* 示例：
+
+```java
+Set<String> emptySet = Collections.emptySet();
+```
+
+- **emptyMap()**
+
+​	* 返回一个空的不可修改的 Map。
+
+## **4.** **集合元素操作**
+
+- **copy(List<? super T> dest, List<? extends T> src)**
+
+​	* 将 src 中的元素复制到 dest 中。 dest 必须足够大，或者会抛出 IndexOutOfBoundsException。
+
+​	* 示例：
+
+```java
+List<Integer> src = Arrays.asList(1, 2, 3);
+List<Integer> dest = new ArrayList<>(Arrays.asList(0, 0, 0));
+Collections.copy(dest, src);
+System.out.println(dest); // 输出: [1, 2, 3]
+```
+
+- **fill(List<? super T> list, T obj)**
+
+​	* 将 List 中的所有元素替换为指定的 obj。
+
+​	* 示例：
+
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+Collections.fill(list, 0);
+System.out.println(list); // 输出: [0, 0, 0]
+```
+
+- **frequency(Collection<?> c, Object o)**
+
+​	* 计算某个元素在集合中出现的次数。
+
+​	* 示例：
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3, 1, 1, 4);
+int count = Collections.frequency(list, 1);
+System.out.println(count); // 输出: 3
+```
+
+- **max(Collection<? extends T> coll)**
+
+​	* 返回集合中的最大元素，前提是集合中的元素实现了 Comparable 接口。
+
+​	* 示例：
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
+int max = Collections.max(list);
+System.out.println(max); // 输出: 5
+```
+
+- **min(Collection<? extends T> coll)**
+
+​	* 返回集合中的最小元素。
+
+## **5.** **不可变集合**
+
+- **unmodifiableList(List<? extends T> list)**
+
+​	* 返回一个不可修改的 List，对其进行修改将抛出 UnsupportedOperationException。
+
+- **unmodifiableSet(Set<? extends T> s)**
+
+​	* 返回一个不可修改的 Set。
+
+- **unmodifiableMap(Map<? extends K, ? extends V> m)**
+
+​	* 返回一个不可修改的 Map。
+
+## **6.** **其他常用方法**
+
+- **disjoint(Collection<?> c1, Collection<?> c2)**
+
+​	* 检查两个集合是否没有交集（即没有共同的元素）。
+
+​	* 示例：
+
+```java
+List<Integer> list1 = Arrays.asList(1, 2, 3);
+List<Integer> list2 = Arrays.asList(4, 5, 6);
+boolean disjoint = Collections.disjoint(list1, list2);
+System.out.println(disjoint); // 输出: true
+```
+
+- **rotate(List<?> list, int distance)**
+
+​	* 将 List 中的元素按照给定的距离进行旋转。
+
+​	* 示例：
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
+Collections.rotate(list, 2);
+System.out.println(list); // 输出: [4, 5, 1, 2, 3]
+```
+
+这些方法可以帮助你在 Java 中高效地操作和管理集合，提供了灵活的功能和高度的可定制性。

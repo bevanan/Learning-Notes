@@ -176,4 +176,4 @@ min.insync.replicas=3（等于副本数），这种情况下要一直保证ISR�
 
 注意下，kafka也会有小时时间到期如何处理处理回收，这个在本期课程有讲，但是笔记内并没有相关记录。 
 
-<img src="/Users/zhengbufeng/Documents/学习笔记/kafka/4、Kafka集群与可靠性.assets/image-20241023125344394.png" alt="image-20241023125344394" style="zoom:50%;" />
+<img src="/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/kafka/4、Kafka集群与可靠性.assets/image-20241023125344394.png" alt="image-20241023125344394" style="zoom:50%;" />

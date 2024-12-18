@@ -251,6 +251,8 @@ kafka-consumer-groups.bat --bootstrap-server :9092 --group c_test --describe
 
 ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1670940113013/2589b72c9be7424bbb87a28a800d0e80.png)
 
+
+
 那么如何使用 kafka 提供的脚本查询某消费者组的元数据信息呢？
 
 ```
@@ -291,9 +293,9 @@ __consumer_offsets 的每条消息格式大致如图所示
 
 过了几天，你入职，一个萝卜一个坑，你就入坑了，你承担了原来小王的工作。这个时候又会发生了分区再均衡。
 
-1）如果提交的偏移量小于消费者实际处理的最后一个消息的偏移量，处于两个偏移量之间的消息会被重复处理，
+1）如果提交的偏移量`小于`消费者实际处理的最后一个消息的偏移量，处于两个偏移量之间的消息会被重复处理，
 
-2）如果提交的偏移量大于客户端处理的最后一个消息的偏移量,那么处于两个偏移量之间的消息将会丢失
+2）如果提交的偏移量`大于`客户端处理的最后一个消息的偏移量,那么处于两个偏移量之间的消息将会丢失
 
 ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1670940113013/1f787d4a41484ab28e617decfe094b38.png)
 

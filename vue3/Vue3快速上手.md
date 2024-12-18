@@ -1400,7 +1400,7 @@ routes:[
 
 1. 编写`News`的子路由：`Detail.vue`
 
-2. 配置路由规则，使用`children`配置项：子路径不用写“/”
+2. 配置路由规则，使用`children`配置项：**子路径不用写“/”**
 
    ```ts
    const router = createRouter({
@@ -1715,13 +1715,13 @@ app.mount('#app')
      import {useCountStore} from '@/store/sum'
      
      // 调用useXxxxxStore得到对应的store
-     const countStore = useSumStore()
+     const countStore = useCountStore()
    </script>
    ```
 
    ```vue
    <template>
-   	<ul>
+     <ul>
        <li v-for="talk in talkStore.talkList" :key="talk.id">
          {{ talk.content }}
        </li>
@@ -1853,7 +1853,7 @@ app.mount('#app')
 
   3. 组件中读取数据：
 
-     ```js
+     ```ts
      const {increment,decrement} = countStore
      let {sum,school,bigSum,upperSchool} = storeToRefs(countStore)
      ```
@@ -2097,7 +2097,7 @@ function sendToy(){
 
 ## 6.4.【v-model】
 
-1. 概述：实现 **父↔子** 之间相互通信。
+1. 概述：实现 **父 ↔ 子** 之间相互通信。
 
 2. 前序知识 —— `v-model`的本质
 
@@ -2108,19 +2108,20 @@ function sendToy(){
    <!-- v-model的本质是下面这行代码 -->
    <input 
      type="text" 
-     :value="userName" 
-     @input="userName =(<HTMLInputElement>$event.target).value"
+     :value="userName" @input="userName =(<HTMLInputElement>$event.target).value"
    >
    ```
-
-3. 组件标签上的`v-model`的本质：`:moldeValue` ＋ `@update:modelValue`事件。
+   
+3. **组件标签上的**`v-model`的本质：`:moldeValue` ＋ `@update:modelValue`事件。 注意下面是在**组件**内的：
 
    ```vue
    <!-- 组件标签上使用v-model指令 -->
    <AtguiguInput v-model="userName"/>
-   
+    
    <!-- 组件标签上v-model的本质 -->
    <AtguiguInput :modelValue="userName" @update:model-value="userName = $event"/>
+   
+   
    ```
 
    `AtguiguInput`组件中：
@@ -2129,7 +2130,7 @@ function sendToy(){
    <template>
      <div class="box">
        <!--将接收的value值赋给input元素的value属性，目的是：为了呈现数据 -->
-   		<!--给input元素绑定原生input事件，触发input事件时，进而触发update:model-value事件-->
+   	<!--给input元素绑定原生input事件，触发input事件时，进而触发update:model-value事件-->
        <input 
           type="text" 
           :value="modelValue" 
@@ -2186,7 +2187,7 @@ function sendToy(){
    
 
 
-## 6.5.【$attrs 】
+## 6.5.【$attrs】
 
 1. 概述：`$attrs`用于实现**当前组件的父组件**，向**当前组件的子组件**通信（**祖→孙**）。
 
@@ -2254,7 +2255,7 @@ function sendToy(){
 </script>
 ```
 
-## 6.6. `$refs、 $parent`
+## 6.6. 【`$refs、 $parent`】
 
 `$refs、$parent`
 
