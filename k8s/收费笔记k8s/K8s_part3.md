@@ -166,7 +166,7 @@ $ kubectl delete all --all -n 命名空间的名称
 
 StatefulSet 用来管理某 Pod 集合的部署和扩缩， **并为这些 Pod 提供持久存储和持久标识符。**
 
-和 Deployment 类似， StatefulSet 管理基于相同容器规约的一组 Pod。但和 Deployment 不同的是， **StatefulSet 为它们的每个 Pod 维护了一个有粘性的 ID。这些 Pod 是基于相同的规约来创建的， 但是不能相互替换：无论怎么调度，每个 Pod 都有一个永久不变的 ID。**
+和 Deployment 类似， StatefulSet 管理基于相同容器规约的一组 Pod。但和 Deployment 不同的是， **StatefulSet 为它们的每个 Pod 维护了一个有粘性的 ID。这些 Pod 是基于相同的规约来创建的， 但是不能相互替换：==无论怎么调度，每个 Pod 都有一个永久不变的 ID。==**
 
 如果希望使用存储卷为工作负载提供持久存储，可以使用 StatefulSet 作为解决方案的一部分。 尽管 StatefulSet 中的单个 Pod 仍可能出现故障， 但持久的 Pod 标识符使得将现有卷与替换已失败 Pod 的新 Pod 相匹配变得更加容易。
 
@@ -186,7 +186,7 @@ StatefulSet 对于需要满足以下一个或多个需求的应用程序很有�
 - 给定 Pod 的存储必须由 PersistentVolume Provisioner 基于所请求的 `storage class` 来制备，或者由管理员预先制备。
 - 删除或者扩缩 StatefulSet 并**不会**删除它关联的存储卷。 这样做是为了保证数据安全，它通常比自动清除 StatefulSet 所有相关的资源更有价值。
 - StatefulSet 当前需要[无头服务](https://kubernetes.io/zh-cn/docs/concepts/services-networking/service/#headless-services)来负责 Pod 的网络标识。你需要负责创建此服务。
-- 当删除一个 StatefulSet 时，该 StatefulSet 不提供任何终止 Pod 的保证。 为了实现 StatefulSet 中的 Pod 可以有序且体面地终止，可以在删除之前将 StatefulSet 缩容到 0。
+- 当删除一个 StatefulSet 时，该 StatefulSet 不提供任何终止 Pod 的保证。`为了实现 StatefulSet 中的 Pod 可以有序且体面地终止，可以在删除之前将 StatefulSet 缩容到 0`。
 - 在默认 Pod 管理策略(`OrderedReady`) 时使用滚动更新， 可能进入需要人工干预才能修复的损坏状态。
 
 #### 3.4 使用 StatefulSet
@@ -430,13 +430,13 @@ spec:
 
 https://kubernetes.io/zh-cn/docs/concepts/workloads/controllers/daemonset/
 
-**DaemonSet** 确保全部（或者某些）节点上运行一个 Pod 的副本。 当有节点加入集群时，也会为他们新增一个 Pod。 当有节点从集群移除时，这些 Pod 也会被回收。删除 DaemonSet 将会删除它创建的所有 Pod。
+**DaemonSet** 确保全部（或者某些）节点上运行一个 Pod 的副本。`当有节点加入集群时，也会为他们新增一个 Pod。 当有节点从集群移除时，这些 Pod 也会被回收`（可参考calico）。删除 DaemonSet 将会删除它创建的所有 Pod。
 
 DaemonSet 的一些典型用法：
 
-- 在每个节点上运行集群守护进程
-- 在每个节点上运行日志收集守护进程
-- 在每个节点上运行监控守护进程
+- 在每个节点上运行 集群    守护进程
+- 在每个节点上运行 日志收集 守护进程
+- 在每个节点上运行 监控    守护进程
 
 一种简单的用法是为每种类型的守护进程在所有的节点上都启动一个 DaemonSet。 一个稍微复杂的用法是为同一种守护进程部署多个 DaemonSet；每个具有不同的标志， 并且对不同硬件类型具有不同的内存、CPU 要求。
 
@@ -499,7 +499,7 @@ spec:
 
 #### 5.3 自动清理完成的 Job
 
-完成的 Job 通常不需要留存在系统中。在系统中一直保留它们会给 API 服务器带来额外的压力。 如果 Job 由某种更高级别的控制器来管理，例如 [CronJob](https://kubernetes.io/zh-cn/docs/concepts/workloads/controllers/cron-jobs/)， 则 Job 可以被 CronJob 基于特定的根据容量裁定的清理策略清理掉。
+完成的 Job 通常**不需要留存**在系统中。在系统中一直保留它们会给 API 服务器带来额外的压力。 如果 Job 由某种更高级别的控制器来管理，例如 [CronJob](https://kubernetes.io/zh-cn/docs/concepts/workloads/controllers/cron-jobs/)， 则 Job 可以被 CronJob 基于特定的根据容量裁定的清理策略清理掉。
 
 - **已完成 Job 的 TTL 机制**
   - 自动清理已完成 Job （状态为 `Complete` 或 `Failed`）的另一种方式是使用由 TTL 控制器所提供的 TTL 机制。 通过设置 Job 的 `.spec.ttlSecondsAfterFinished` 字段，可以让该控制器清理掉已结束的资源。TTL 控制器清理 Job 时，会级联式地删除 Job 对象。 换言之，它会删除所有依赖的对象，包括 Pod 及 Job 本身。 注意，当 Job 被删除时，系统会考虑其生命周期保障，例如其 Finalizers。
@@ -569,6 +569,8 @@ Job `pi-with-ttl` 在结束 100 秒之后，可以成为被自动删除的对象
 
 ![image-20230307132243053](K8s.assets/image-20230307132243053.png)
 
+kubectl → aip-service → service → endpoint → kubeproxy → pod
+
 ### 4 使用 Service
 
 ```yml
@@ -584,7 +586,7 @@ spec:
     metadata:
       name: nginx
       labels:
-        app: nginxl
+        app: nginx-l
     spec:
       containers:
         - name: nginx
@@ -603,11 +605,11 @@ metadata:
   name: nginx
 spec:
   selector:
-    app: nginxl
+    app: nginx-l
   ports:
-    - port: 8080 #service 端口
-      targetPort: 80 #容器端口
-      nodePort: 31001 #node 节点端口 固定在 30000-32767 之间
+    - port: 8080      # service 端口 pod 之间访问的端口
+      targetPort: 80  # 容器端口
+      nodePort: 31001 # node 节点端口 固定在 30000-32767 之间， 外部可访问的端口
   type: NodePort
 ```
 
@@ -672,11 +674,12 @@ Kubernetes `ServiceTypes` 允许指定你所需要的 Service 类型。
 - `ClusterIP`：在集群内部暴露 Service，只能被集群内部的其他对象访问，通常用于内部服务发现，不会向集群外部暴露。
 - `NodePort`：将 Service 暴露在 Node 的某个端口上，从而可以通过 Node 的 IP 地址和端口号来访问 Service，通常用于开发和测试环境。
 - `LoadBalancer`：通过云服务商提供的负载均衡器来将 Service 暴露到公网上，使得外部用户可以访问 Service。
-- `ExternalName`：将 Service 映射到一个 DNS 名称上，从而可以通过 DNS 名称来访问 Service，通常用于访问外部服务。
+  - `ExternalName`：将 Service 映射到一个 DNS 名称上，从而可以通过 DNS 名称来访问 Service，通常用于访问外部服务。
+
 
 #### 6.1 ClusterIP 类型
 
-- `这是最常用的 Service 类型之一`。在集群内部创建一个虚拟 IP 地址，它可以被其他在同一集群内的 Pod 访问，但不能被集群外部的请求所访问。这种类型的服务通常用于内部服务的暴露，例如数据库或者缓存服务。比如在一个 Web 应用中，你可能需要连接到一个数据库，但是这个数据库并不需要在应用之外暴露。这时候，你可以使用 ClusterIP 类型的 Service，让应用可以访问到数据库。
+- `这是最常用的 Service 类型之一`。在集群内部**创建一个虚拟 IP 地址**，它可以被其他在同一集群内的 Pod 访问，但不能被集群外部的请求所访问。这种类型的服务通常用于内部服务的暴露，例如数据库或者缓存服务。比如在一个 Web 应用中，你可能需要连接到一个数据库，但是这个数据库并不需要在应用之外暴露。这时候，你可以使用 ClusterIP 类型的 Service，让应用可以访问到数据库。
 
 #### 6.2 NodePort 类型
 
@@ -718,7 +721,7 @@ spec:
       - name: mysql
         image: mysql/mysql-server:8.0
         env:
-        - name: MYSQL_ROOT_PASSWORD
+        - name: MYSQmL_ROOT_PASSWORD
           value: root
         ports:
         - name: mysql
@@ -856,7 +859,7 @@ spec:
       command: ["/bin/sh", "-c", "cat /data/hello.txt ; sleep 3600"]
       volumeMounts:
         - name: shared-data
-          mountPath: /data
+          mountPath: /data   # pod 内的路径
   volumes:
     - name: shared-data
       emptyDir: {}
@@ -878,14 +881,18 @@ spec:
     command: ["/bin/sh", "-c", "echo 'hello' > /data/data.txt && sleep 3600"]
     volumeMounts:
     - name: data
-      mountPath: /data
+      mountPath: /data   # pod 内的路径
   volumes:
   - name: data
     hostPath:
-      path: /data/hostpath
+      path: /data/hostpath # 节点的路径
 ```
 
-`总结: 如果 Pod 被销毀了，hostPath 对应的目录还是会被保留，从这一点来看，hostPath 的持久性比emptyDir 强。不过一旦Host 崩溃，hostPath 也就无法访问了。但是这种方式也带来另外一个问题增加了 pod 与节点的耦合。`
+- 在容器的`volumeMounts`部分，Pod将名为`data`的卷挂载到容器中的`/data`路径上。这样，容器中的`/data`目录就会映射到宿主机上的`/data/hostpath`路径。
+
+- 在容器运行时，任何写入`/data`目录的操作（比如在命令中使用`echo 'hello' > /data/data.txt`），都会影响宿主机节点的`/data/hostpath`路径。
+
+`总结: 如果 Pod 被销毀了，hostPath 对应的目录还是会被保留。不过一旦Host 崩溃，hostPath 也就无法访问了。但是这种方式增加了 pod 与节点的耦合。`
 
 #### 4.3 nfs
 
@@ -912,6 +919,18 @@ spec:
 ```
 
 `总结: 相对于 emptyDir 和 hostPath，这种 volume 类型的最大特点就是不依赖 Kuberees Volume 的底层基础设施由独立的存储系统管理，与 Kubernetes 集群是分离的。数据被持久化后，即使整个 Kubernetes 崩溃也不会受损。当然，运维这样的存储系统通常不是一项简单的工作，特别是对可靠性、可用性和扩展性 有较高要求的时候。`
+
+
+
+还有一种类型
+
+```yaml
+  - name: nfs-volume
+    persistentVolumeClaim:
+      claimName: glusterfs-enginepackagebin-claim
+```
+
+
 
 ### 5 PV &  PVC
 
@@ -1014,6 +1033,10 @@ spec:
     persistentVolumeClaim:
       claimName: nfs-pvc
 ```
+
+
+
+
 
 #### 5.4 动态供给
 
@@ -1193,6 +1216,90 @@ spec:
         app: mysql
   ```
 
+
+
+#### 5.5 公司实际案例
+
+我想查找执行引擎内的挂在哪个地方
+
+容器云执行引擎片段
+
+`kubectl get po enginemgr-76c44bd7c6-9gmtf -n manage -o yaml`
+
+```yaml
+ - name: packagebin
+   persistentVolumeClaim:
+      claimName: glusterfs-enginepackagebin-claim
+```
+
+查看具体pvc
+
+`kubectl get pvc -n manage`
+
+`kubectl get pvc glusterfs-enginepackagebin-claim -n manage -o yaml`
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"Helm"},"name":"glusterfs-enginepackagebin-claim","namespace":"manage"},"spec":{"accessModes":["ReadWriteMany"],"resources":{"requests":{"storage":"10Gi"}},"selector":{"matchLabels":{"type":"enginepackagebin"}},"volumeMode":"Filesystem","volumeName":"glusterfs-enginepackagebin"}}
+    pv.kubernetes.io/bind-completed: "yes"
+  creationTimestamp: "2024-12-14T04:49:01Z"
+  finalizers:
+  - kubernetes.io/pvc-protection
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: glusterfs-enginepackagebin-claim
+  namespace: manage
+  resourceVersion: "277653"
+  uid: b6e119bb-e4d1-4a29-b953-95dd6e03c34c
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      type: enginepackagebin
+  volumeMode: Filesystem
+  volumeName: glusterfs-enginepackagebin
+status:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 10Gi
+  phase: Bound
+```
+
+在这里面依旧没有看到对应的位置
+
+最后说在endpoint.yaml内有记录
+
+```yaml
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: glusterfs-cluster
+  namespace: manage
+subsets:
+  - addresses:
+      - ip: 10.1.12.218
+    ports:
+      - port: 49152
+        protocol: TCP
+```
+
+所以，这个endpoint的作用是什么？是跟gfs配合使用的？为什么卷路径会在/home/enginePakegebin/...？
+
+#### 
+
+
+
+
+
 ## 第七章 ConfigMap & Secret
 
 - ConfigMap 
@@ -1225,14 +1332,12 @@ ConfigMap 可以通过三种方式进行配置数据的注入：
   ```shell
   # 查看 configmap
   $ kubectl get configmap/cm  
-  
   # 查看详细
   $ kubectl describe configmap/cm my-config
-  
   # 删除 cm
   $ kubectl delete cm my-config
   ```
-
+  
 - **命令行创建**：
 
   - 可以使用`kubectl create configmap`命令来创建configmap，具体命令如下：
@@ -1259,7 +1364,7 @@ ConfigMap 可以通过三种方式进行配置数据的注入：
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: app-config
+      name: my-config
     data:
       application.yml: |
         name: xiaochen
@@ -1308,18 +1413,20 @@ spec:
     image: busybox
     command: ["/bin/sh", "-c", "echo $BUSY_NAME ; sleep 3600;"]
     env:
-    # name: 是容器需要环境变量名称
+    # name: 是容器内需要的环境变量的名称
     - name: BUSY_NAME
     # valueForm: value 来源与什么
       valueFrom:
         configMapKeyRef:  # 值来源与 configmap  来源与哪个 configmap 来源与哪个 configmap 中 key
-          name: app-cm
+          name: my-config
           key: name
-    # 一次性注入这个 configmap
+    # 一次性注入这个 configmap ，就不依赖key ，直接用配置就行，比如：$name, $version
     envFrom:
     - configMapRef:
         name: my-config
 ```
+
+<img src="./K8s_part3.assets/image-20241219225537019.png" alt="image-20241219225537019" style="zoom:50%;" /> 
 
 `注意: env 是指定 configmap 中某个 key 进行注入  envForm 将 configmap 中内容全部注入`
 
@@ -1343,6 +1450,8 @@ spec:
       configMap:
         name: application-cm
 ```
+
+`/data`是要进入到pod内部的/data才能看到
 
 ### 2 Secret
 
@@ -1384,8 +1493,8 @@ Secrets 可以在 Pod 的 spec 中通过 volume 和环境变量的方式引用�
       name: my-secret
     type: Opaque
     data:
-      username: YWRtaW4= # base64 编码后的用户名 admin
-      password: MWYyZDFlMmU2N2Rm # base64 编码后的密码 1f2d1e2e67df
+      username: YWRtaW4= 			# base64 编码后的用户名 admin
+      password: MWYyZDFlMmU2N2Rm 	# base64 编码后的密码 1f2d1e2e67df
     ```
 
   - `注意: 这个 YAML 文件定义了一个名为 my-secret 的 Secret 对象，其中包含了两个 base64 编码后的 key-value 对：username 和 password。`
@@ -1495,8 +1604,8 @@ Ingress Controller 是 Kubernetes 中的一种资源，它负责将外部请求�
 
 常见的 Ingress Controller 包括：
 
-1. Nginx Ingress Controller 是由 Kubernetes 社区维护的另一个 Ingress Controller，它也是使用 Nginx 作为反向代理实现的，可以支持 HTTP 和 HTTPS 等协议，支持负载均衡、路由、HTTPS证书管理等功能。
-2. Ingress Nginx Controller 是官方维护的一个 Ingress Controller，它是使用 Nginx 作为反向代理实现的，可以支持 HTTP 和 HTTPS 等协议，支持负载均衡、路由、HTTPS证书管理等功能。
+1. Nginx Ingress Controller 是由 Kubernetes 社区维护的另一个 Ingress Controller，它也是使用 Nginx 作为反向代理实现的，可以支持 HTTP 和 HTTPS 等协议，支持负载均衡、路由、HTTPS证书管理等功能。（社区维护）
+2. Ingress Nginx Controller 是Nginx官方维护的一个 Ingress Controller，它是使用 Nginx 作为反向代理实现的，可以支持 HTTP 和 HTTPS 等协议，支持负载均衡、路由、HTTPS证书管理等功能。（Nginx官方维护）
 3. Traefik Ingress Controller：基于 Go 语言开发的 Ingress Controller，支持多种路由匹配方式和多种后端服务发现方式。
    - **Traefik Ingress Controller: 标准实现 支持 官方 Ingress 路由规则 注意: 这种方式使用繁琐!**
    - **Traefik Route CRD(customer resuource definition)自定义资源  注意: 使用这种方式简单,自定义资源方式定义路由规则。**
@@ -1542,6 +1651,8 @@ $ kubectl get pod -n kube-system | grep kube-proxy |awk '{system("kubectl delete
 ```
 
 
+
+https： curl -k 参数不校验证书，应为域名也是假的，申请不到证书，-k就是不校验
 
 ## 第九章 命名空间
 
@@ -1688,9 +1799,9 @@ To access NGINX from outside the cluster, follow the steps below:
     echo "http://${SERVICE_IP}:${SERVICE_PORT}"
 ```
 
->  注意: 安装chart时创建了一个新的 *release* 对象。上述发布被命名为 `nginx`。 （如果想让Helm生成一个名称，删除发布名称并使用`--generate-name`。）
+>  注意: 安装chart时创建了一个新的 *release* 对象。上述发布被命名为nginx`。 （如果想让Helm生成一个名称，删除发布名称并使用`--generate-name`。）
 
-helm 安装顺序: 	https://helm.sh/zh/docs/intro/using_helm/
+helm 安装顺序: https://helm.sh/zh/docs/intro/using_helm/
 
 ---
 

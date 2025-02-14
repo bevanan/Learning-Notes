@@ -17,7 +17,7 @@
 
 #### 1.1 **简介**
 
-Pod 是可以在 Kubernetes 中**创建和管理的、最小的可部署的计算单元**。**Pod**（就像在鲸鱼荚或者豌豆荚中）**是一组（一个或多个）容器**； 这些容器共享存储、网络、以及怎样运行这些容器的声明。 Pod 中的**内容总是并置（colocated）的并且一同调度，在共享的上下文中运行**。简言之如果用 Docker 的术语来描述，**Pod 类似于共享名字空间并共享文件系统卷的一组容器。**
+Pod 是可以在 Kubernetes 中**创建和管理的、==最小==的可部署的计算单元**。**Pod**（就像在鲸鱼荚或者豌豆荚中）**是一组（一个或多个）容器**； 这些容器共享存储、网络、以及怎样运行这些容器的声明。 Pod 中的**内容总是并置（colocated）的并且一同调度，在共享的上下文中运行**。简言之如果用 Docker 的术语来描述，**Pod 类似于共享名字空间并共享文件系统卷的一组容器。**
 
 `定义: Pod 就是用来管理一组(一个|多个)容器的集合 特点: 共享网络 共享存储 共享上下文环境`
 
@@ -110,9 +110,9 @@ $ kubectl delete -f .
 
 ```shell
 # 注意: 这种方式进入容器默认只会进入 pod 中第一个容器
-$ kubectl exec -it nginx(pod名称) --(固定写死) bash(执行命令)
+$ kubectl exec -it nginx(pod名称) -- bash(执行命令)
 # 注意: 进入指定 pod 中指定容器
-$ kubectl exec -it pod名称 -c 容器名称 --(固定写死) bash(执行命令)
+$ kubectl exec -it pod名称 -c 容器名称 -- bash(执行命令)
 ```
 
 #### 2.5 查看 pod 日志
@@ -129,6 +129,14 @@ $ kubectl logs -f pod名称 -c 容器名称
 ```shell
 $ kubectl describe pod nginx(pod名称)
 ```
+
+#### 2.7 查看 pod 的资源使用情况
+
+```shell
+$ kubectl top pod nginx(pod名称)
+```
+
+
 
 ### 3 Pod 运行多个容器
 
@@ -191,7 +199,7 @@ $ kubectl exec -it myapp -c redis -- sh
 
 `标签由键值对组成`，其有效标签值：
 
-- 必须为 63 个字符或更少（可以为空）
+- 必须为少于 63 个字符（包含63，可以为空）
 - 除非标签值为空，必须以字母数字字符（`[a-z0-9A-Z]`）开头和结尾
 - 包含破折号（`-`）、下划线（`_`）、点（`.`）和字母或数字
 
@@ -224,7 +232,7 @@ $ kubectl get pods --show-labels
 
 # 给pod增加标签
 # kubectl label pod pod名称 标签键值对
-$ kubectl label pod myapp env=prod
+$ kubectl label pod myapp  env=prod
 
 # 覆盖标签 --overwrite
 $ kubectl label --overwrite pod myapp env=test
@@ -244,7 +252,7 @@ $ kubectl get po -l 'env notin (test,prod)' #选择含有指定值的 pod
 
 > 摘自官网: https://kubernetes.io/zh-cn/docs/concepts/workloads/pods/pod-lifecycle/
 
- Pod 遵循预定义的生命周期，起始于 `Pending` 阶段， 如果至少其中有一个主要容器正常启动，则进入 `Running`，之后取决于 Pod 中是否有容器以失败状态结束而进入 `Succeeded` 或者 `Failed` 阶段。与此同时Pod 在其生命周期中只会被调度一次。 一旦 Pod 被调度（分派）到某个节点，Pod 会一直在该节点运行，直到 Pod 停止或者被终止。
+Pod 遵循预定义的生命周期，起始于 `Pending` 阶段， 如果至少其中有一个主要容器正常启动，则进入 `Running`，之后取决于 Pod 中是否有容器以失败状态结束而进入 `Succeeded` 或者 `Failed` 阶段。与此同时Pod 在其生命周期中只会被调度一次。 一旦 Pod 被调度（分派）到某个节点，Pod 会一直在该节点运行，直到 Pod 停止或者被终止。
 
 #### 5.1 生命周期
 
@@ -260,13 +268,13 @@ Pod 自身不具有自愈能力。如果 Pod 被调度到某节点而该节点�
 
 Pod 阶段的数量和含义是严格定义的。 除了本文档中列举的内容外，不应该再假定 Pod 有其他的 `phase` 值。
 
-| 取值                | 描述                                                         |
-| :------------------ | :----------------------------------------------------------- |
-| `Pending`（悬决）   | Pod 已被 Kubernetes 系统接受，但有一个或者多个容器尚未创建亦未运行。此阶段包括等待 Pod 被调度的时间和通过网络下载镜像的时间。 |
-| `Running`（运行中） | Pod 已经绑定到了某个节点，Pod 中所有的容器都已被创建。至少有一个容器仍在运行，或者正处于启动或重启状态。 |
-| `Succeeded`（成功） | Pod 中的所有容器都已成功终止，并且不会再重启。               |
-| `Failed`（失败）    | Pod 中的所有容器都已终止，并且至少有一个容器是因为失败终止。也就是说，容器以非 0 状态退出或者被系统终止。 |
-| `Unknown`（未知）   | 因为某些原因无法取得 Pod 的状态。这种情况通常是因为与 Pod 所在主机通信失败。 |
+| 取值                     | 描述                                                         |
+| :----------------------- | :----------------------------------------------------------- |
+| `Pending`<br/>（悬决）   | Pod 已被 Kubernetes 系统接受，但有一个或者多个容器尚未创建亦未运行。此阶段包括等待 Pod 被调度的时间和通过网络下载镜像的时间。 |
+| `Running`<br/>（运行中） | Pod 已经绑定到了某个节点，Pod 中所有的容器都已被创建。至少有一个容器仍在运行，或者正处于启动或重启状态。 |
+| `Succeeded`<br/>（成功） | Pod 中的所有容器都已成功终止，并且不会再重启。               |
+| `Failed`<br/>（失败）    | Pod 中的所有容器都已终止，并且至少有一个容器是因为失败终止。也就是说，容器以非 0 状态退出或者被系统终止。 |
+| `Unknown`<br/>（未知）   | 因为某些原因无法取得 Pod 的状态。这种情况通常是因为与 Pod 所在主机通信失败。 |
 
 > **说明：**
 >
@@ -328,7 +336,7 @@ spec:
             command: ["/bin/sh","-c","echo postStart >> /start.txt"]
         preStop:  #容器终止之前执行
           exec:
-            command: ["/bin/sh","-c","echo postStop >> /stop.txt && sleep 5"]
+            command: ["/bin/sh","-c","echo preStop >> /stop.txt && sleep 5"]
       ports:
     		- containerPort: 80
 ```
@@ -425,9 +433,9 @@ probe 是由 kubelet对容器执行的定期诊断。 要执行诊断，kubelet 
 
 ```yml
 initialDelaySeconds: 5   #初始化时间5s
-periodSeconds: 4    		 #检测间隔时间4s
-timeoutSeconds: 1  			 #默认检测超时时间为1s
-failureThreshold: 3  		 #默认失败次数为3次，达到3次后重启pod
+periodSeconds: 4    	 #检测间隔时间4s
+timeoutSeconds: 1  		 #默认检测超时时间为1s
+failureThreshold: 3  	 #默认失败次数为3次，达到3次后重启pod
 successThreshold: 1   	 #默认成功次数为1次，1次监测成功代表成功
 ```
 
@@ -890,8 +898,8 @@ Init 容器是一种特殊容器，在Pod 内的**应用容器==启动之前==�
 init 容器与普通的容器非常像，除了如下几点：
 
 - 它们总是运行到完成。如果 Pod 的 Init 容器失败，kubelet 会不断地重启该 Init 容器直到该容器成功为止。 然而，如果 Pod 对应的 `restartPolicy` 值为 "Never"，并且 Pod 的 Init 容器失败， 则 Kubernetes 会将整个 Pod 状态设置为失败。
-- 每个都必须在下一个启动之前成功完成。
-- 同时 Init 容器不支持 `lifecycle`、`livenessProbe`、`readinessProbe` 和 `startupProbe`， 因为它们必须在 Pod 就绪之前运行完成。
+- 每个都==必须==在下一个启动之前成功完成。
+- 同时 Init 容器不支持 `lifecycle`、`livenessProbe`、`readinessProbe` 和 `startupProbe`， 因为它们**必须在 Pod 就绪之前运行完成**。
 - 如果为一个 Pod 指定了多个 Init 容器，这些容器会按顺序逐个运行。 每个 Init 容器必须运行成功，下一个才能够运行。当所有的 Init 容器运行完成时， Kubernetes 才会为 Pod 初始化应用容器并像平常一样运行。
 - Init 容器支持应用容器的全部字段和特性，包括资源限制、数据卷和安全设置。 然而，Init 容器对资源请求和限制的处理稍有不同。
 
@@ -1055,7 +1063,7 @@ metadata:
 spec:
   affinity:
     nodeAffinity:
-    	#节点必须包含一个键名为 ssd 的标签， 并且该标签的取值必须为 fast 或 superfast。
+      #节点必须包含一个键名为 ssd 的标签， 并且该标签的取值必须为 fast 或 superfast。
       requiredDuringSchedulingIgnoredDuringExecution: 
         nodeSelectorTerms:
         - matchExpressions:

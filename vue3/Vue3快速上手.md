@@ -1007,8 +1007,8 @@ function test(){
 > ```ts
 >// 定义一个接口，限制每个Person对象的格式
 > export interface PersonInter {
->    id: string,
->    name: string,
+>      id: string,
+>      name: string,
 >      age: number
 >    }
 >    
@@ -1653,7 +1653,7 @@ app.mount('#app')
 
 1. `Store`是一个保存：**状态**、**业务逻辑** 的实体，每个组件都可以**读取**、**写入**它。
 
-2. 它有三个概念：`state`、`getter`、`action`，相当于组件中的： `data`、 `computed` 和 `methods`。
+2. 它有三个概念：`state`、`getter`、`action`，相当于组件中的： `data`、`computed` 和 `methods`。
 
 3. 具体编码：`src/store/count.ts`
 
@@ -1703,7 +1703,7 @@ app.mount('#app')
 
 5. 组件中使用`state`中的数据
 
-   > 其中useXxxxxStore 为命名规范；countStore为自定义变量名称，包含着一整个ts内的参数和方法
+   > 其中 useCountStore 为命名规范；countStore 为自定义变量名称，包含着一整个ts内的参数和方法
 
    ```vue
    <template>
@@ -1810,7 +1810,7 @@ app.mount('#app')
   /* 引入storeToRefs */
   import { storeToRefs } from 'pinia'
 
-	/* 得到countStore */
+  /* 得到countStore */
   const countStore = useCountStore()
   /* 使用storeToRefs转换countStore，随后解构 */
   const {sum} = storeToRefs(countStore)
@@ -2018,6 +2018,8 @@ export const useTalkStore = defineStore('talk',()=>{
 
 ## 6.3. 【mitt】
 
+绑定 on ，触发 emit ， 解绑 off
+
 概述：与消息订阅与发布（`pubsub`）功能类似（创建一个公共区域），可以实现任意组件间通信。
 
 安装`mitt`
@@ -2120,10 +2122,8 @@ function sendToy(){
     
    <!-- 组件标签上v-model的本质 -->
    <AtguiguInput :modelValue="userName" @update:model-value="userName = $event"/>
-   
-   
    ```
-
+   
    `AtguiguInput`组件中：
 
    ```vue
@@ -2146,7 +2146,7 @@ function sendToy(){
      const emit = defineEmits(['update:model-value'])
    </script>
    ```
-
+   
 4. 也可以更换`value`，例如改成`abc`
 
    ```vue

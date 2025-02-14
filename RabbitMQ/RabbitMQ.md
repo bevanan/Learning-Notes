@@ -1,3 +1,5 @@
+
+
 # RabbitMQ
 
 消息中间件
@@ -173,10 +175,6 @@ RabbitMQ提供了很多中通讯方式，依然可以去官方查看：https://r
   import java.io.IOException;
   import java.util.concurrent.TimeoutException;
   
-  /**
-   * @author zjw
-   * @description
-   */
   public class RabbitMQConnectionUtil {
   
       public static final String RABBITMQ_HOST = "192.168.11.32";
@@ -187,7 +185,6 @@ RabbitMQ提供了很多中通讯方式，依然可以去官方查看：https://r
   
       /**
        * 构建RabbitMQ的连接对象
-       * @return
        */
       public static Connection getConnection() throws Exception {
           //1. 创建Connection工厂
@@ -224,11 +221,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Test;
 
-/**
- * @author zjw
- * @description
- * @date 2022/1/24 22:54
- */
 public class Publisher {
 
     public static final String QUEUE_NAME = "hello";
@@ -255,21 +247,13 @@ public class Publisher {
 消费者：
 
 ```java
-package com.mashibing.helloworld;
-
 import com.mashibing.util.RabbitMQConnectionUtil;
 import com.rabbitmq.client.*;
 import org.junit.Test;
 
 import java.io.IOException;
 
-/**
- * @author zjw
- * @description
- * @date 2022/1/24 23:02
- */
 public class Consumer {
-
     @Test
     public void consume() throws Exception {
         //1. 获取连接对象
@@ -307,21 +291,13 @@ public class Consumer {
 - 消费者：**让消费者关闭自动ack，并且设置消息的流控，最终实现消费者可以尽可能去多消费消息**
 
   ```java
-  package com.mashibing.workqueues;
-  
   import com.mashibing.util.RabbitMQConnectionUtil;
   import com.rabbitmq.client.*;
   import org.junit.Test;
   
   import java.io.IOException;
   
-  /**
-   * @author zjw
-   * @description
-   * @date 2022/1/25 19:52
-   */
   public class Consumer {
-  
       @Test
       public void consume1() throws Exception {
           //1. 获取连接对象
@@ -406,13 +382,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Test;
 
-/**
- * @author zjw
- * @description
- * @date 2022/1/25 20:08
- */
 public class Publisher {
-
     public static final String EXCHANGE_NAME = "pubsub";
     public static final String QUEUE_NAME1 = "pubsub-one";
     public static final String QUEUE_NAME2 = "pubsub-two";
@@ -453,21 +423,13 @@ public class Publisher {
 生产者：在绑定Exchange和Queue时，需要指定好routingKey，同时在发送消息时，也指定routingKey，只有routingKey一致时，才会把指定的消息路由到指定的Queue
 
 ```java
-package com.mashibing.routing;
-
 import com.mashibing.util.RabbitMQConnectionUtil;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Test;
 
-/**
- * @author zjw
- * @description
- * @date 2022/1/25 20:20
- */
 public class Publisher {
-
     public static final String EXCHANGE_NAME = "routing";
     public static final String QUEUE_NAME1 = "routing-one";
     public static final String QUEUE_NAME2 = "routing-two";
@@ -511,21 +473,13 @@ public class Publisher {
 生产者：TOPIC类型可以编写带有特殊意义的routingKey的绑定方式
 
 ```java
-package com.mashibing.topics;
-
 import com.mashibing.util.RabbitMQConnectionUtil;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Test;
 
-/**
- * @author zjw
- * @description
- * @date 2022/1/25 20:28
- */
 public class Publisher {
-
     public static final String EXCHANGE_NAME = "topic";
     public static final String QUEUE_NAME1 = "topic-one";
     public static final String QUEUE_NAME2 = "topic-two";
@@ -556,7 +510,6 @@ public class Publisher {
         channel.basicPublish(EXCHANGE_NAME,"small.white.rabbit",null,"小白兔".getBytes());
         channel.basicPublish(EXCHANGE_NAME,"lazy.dog.dog.dog.dog.dog.dog",null,"懒狗狗狗狗狗狗".getBytes());
         System.out.println("消息成功发送！");
-
     }
 }
 ```
@@ -725,24 +678,15 @@ public class Consumer {
 - 声明交换机&队列
 
   ```java
-  package com.mashibing.rabbitmqboot.config;
-  
   import org.springframework.amqp.core.*;
   import org.springframework.context.annotation.Bean;
   import org.springframework.context.annotation.Configuration;
   
-  /**
-   * @author zjw
-   * @description
-   * @date 2022/2/8 20:25
-   */
   @Configuration
   public class RabbitMQConfig {
-  
       public static final String EXCHANGE = "boot-exchange";
       public static final String QUEUE = "boot-queue";
       public static final String ROUTING_KEY = "*.black.*";
-       
       
       @Bean
     	public Exchange bootExchange(){
@@ -777,14 +721,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-/**
- * @author zjw
- * @description
- * @date 2022/2/8 21:05
- */
 @SpringBootTest
 public class PublisherTest {
-
     @Autowired
     public RabbitTemplate rabbitTemplate;
 
@@ -793,7 +731,6 @@ public class PublisherTest {
         rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE,"big.black.dog","message");
         System.out.println("消息发送成功");
     }
-
 
     @Test
     public void publishWithProps(){
@@ -825,14 +762,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-/**
- * @author zjw
- * @description
- * @date 2022/2/8 21:11
- */
 @Component
 public class ConsumeListener {
-
     @RabbitListener(queues = RabbitMQConfig.QUEUE)
     public void consume(String msg, Channel channel, Message message) throws IOException {
         System.out.println("队列的消息为：" + msg);
@@ -858,8 +789,6 @@ spring:
 			acknowledge-mode: manual # 开启手动Ack
 			perfech: 10
 ```
-
-
 
 #### 常见错误
 
@@ -1037,14 +966,8 @@ import org.springframework.amqp.core.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * @author zjw
- * @description
- * @date 2022/2/10 15:04
- */
 @Configuration
 public class DeadLetterConfig {
-
     public static final String NORMAL_EXCHANGE = "normal-exchange";
     public static final String NORMAL_QUEUE = "normal-queue";
     public static final String NORMAL_ROUTING_KEY = "normal.#";
@@ -1052,7 +975,6 @@ public class DeadLetterConfig {
     public static final String DEAD_EXCHANGE = "dead-exchange";
     public static final String DEAD_QUEUE = "dead-queue";
     public static final String DEAD_ROUTING_KEY = "dead.#";
-
 
     @Bean
     public Exchange normalExchange(){
@@ -1069,7 +991,6 @@ public class DeadLetterConfig {
         return BindingBuilder.bind(normalQueue).to(normalExchange).with(NORMAL_ROUTING_KEY).noargs();
     }
 
-
     @Bean
     public Exchange deadExchange(){
         return ExchangeBuilder.topicExchange(DEAD_EXCHANGE).build();
@@ -1084,7 +1005,6 @@ public class DeadLetterConfig {
     public Binding deadBinding(Queue deadQueue,Exchange deadExchange){
         return BindingBuilder.bind(deadQueue).to(deadExchange).with(DEAD_ROUTING_KEY).noargs();
     }
-
 }
 ```
 
@@ -1095,8 +1015,6 @@ public class DeadLetterConfig {
 - 基于消费者进行reject或者nack实现死信效果
 
   ```java
-  package com.mashibing.rabbitmqboot;
-  
   import com.mashibing.rabbitmqboot.config.DeadLetterConfig;
   import com.rabbitmq.client.Channel;
   import org.springframework.amqp.core.Message;
@@ -1105,14 +1023,8 @@ public class DeadLetterConfig {
   
   import java.io.IOException;
   
-  /**
-   * @author zjw
-   * @description
-   * @date 2022/2/10 15:17
-   */
   @Component
   public class DeadListener { // 发送的是
-  
       @RabbitListener(queues = DeadLetterConfig.NORMAL_QUEUE)
       public void consume(String msg, Channel channel, Message message) throws IOException {
           System.out.println("接收到normal队列的消息：" + msg);
@@ -1181,8 +1093,6 @@ public class DeadLetterConfig {
 - 构建延迟交换机
 
   ```java
-  package com.mashibing.rabbitmqboot.config;
-  
   import org.springframework.amqp.core.*;
   import org.springframework.context.annotation.Bean;
   import org.springframework.context.annotation.Configuration;
@@ -1190,13 +1100,8 @@ public class DeadLetterConfig {
   import java.util.HashMap;
   import java.util.Map;
   
-  /**
-   * @author zjw
-   * @description
-   */
   @Configuration
   public class DelayedConfig {
-  
       public static final String DELAYED_EXCHANGE = "delayed-exchange";
       public static final String DELAYED_QUEUE = "delayed-queue";
       public static final String DELAYED_ROUTING_KEY = "delayed.#";
@@ -1223,8 +1128,6 @@ public class DeadLetterConfig {
 - 发送消息
 
   ```java
-  package com.mashibing.rabbitmqboot;
-  
   import com.mashibing.rabbitmqboot.config.DelayedConfig;
   import org.junit.jupiter.api.Test;
   import org.springframework.amqp.AmqpException;
@@ -1234,13 +1137,8 @@ public class DeadLetterConfig {
   import org.springframework.beans.factory.annotation.Autowired;
   import org.springframework.boot.test.context.SpringBootTest;
   
-  /**
-   * @author zjw
-   * @description
-   */
   @SpringBootTest
   public class DelayedPublisherTest {
-  
       @Autowired
       private RabbitTemplate rabbitTemplate;
   
@@ -1374,8 +1272,6 @@ headers就是一个基于key-value的方式，让Exchange和Queue绑定的到一
 具体实现方式
 
 ```java
-package com.mashibing.headers;
-
 import com.mashibing.util.RabbitMQConnectionUtil;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
@@ -1386,10 +1282,6 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author zjw
- * @description
- */
 public class Publisher {
     public static final String HEADER_EXCHANGE = "header_exchange";
     public static final String HEADER_QUEUE = "header_queue";

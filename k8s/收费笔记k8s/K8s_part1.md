@@ -297,7 +297,7 @@ disabled_plugins = ["restart"]
 [plugins.linux]
 shim_debug = true
 [plugins.cri.registry.mirrors."docker.io"]
-endpoint = ["https://frz7i079.mirror.aliyuncs.com"]
+1
 [plugins.cri]
 sandbox_image = "registry.aliyuncs.com/google_containers/pause:3.2"
 EOF
@@ -635,7 +635,5 @@ kube-system    kube-proxy-x6vhn                    1/1     Running   0          
 kube-system    kube-scheduler-k8s-node1            1/1     Running   0          21h
 ```
 
----
 
-- 
 

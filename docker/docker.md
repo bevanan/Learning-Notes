@@ -153,7 +153,7 @@ nginx
 
 |                           执行结果                           |
 | :----------------------------------------------------------: |
-| ![image-20240912231951266](/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/docker/docker.assets/image-20240912231951266.png) |
+| <img src="./docker.assets/image-20240912231951266.png" alt="image-20240912231951266" style="zoom:50%;"/> |
 
 然后里面的容器，以docker0作为gateway，在172.17.0.1的基础上分配ip给运行的容器，如下
 
@@ -161,7 +161,7 @@ nginx
 
 | 运行容器后，执行命令 docker inspect mynginx                  |
 | ------------------------------------------------------------ |
-| ![image-20240912232922415](/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/docker/docker.assets/image-20240912232922415.png) |
+| <img src="./docker.assets/image-20240912232922415.png" alt="image-20240912232922415" style="zoom:50%;" /> |
 
 然后可以通过这种方式直接去访问另一个容器 `curl http://172.17.0.3:99`
 
@@ -224,7 +224,7 @@ bitnami/redis
 
 | docker logs 容器id                                           |
 | ------------------------------------------------------------ |
-| ![image-20240913084204895](/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/docker/docker.assets/image-20240913084204895.png) |
+| <img src="./docker.assets/image-20240913084204895.png" alt="image-20240913084204895" style="zoom:50%;" /> |
 
 > 可看到对应的文件只有root有读写权限，其他只有执行和读的权限
 
@@ -351,7 +351,7 @@ networks:
 
 |                           基础命令                           |
 | :----------------------------------------------------------: |
-| ![image-20240915224251576](/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/docker/docker.assets/image-20240915224251576.png) |
+| ![image-20240915224251576](./docker.assets/image-20240915224251576.png) |
 
 启动一个jar
 
@@ -375,7 +375,7 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 
 | 分层机制                                                     |
 | ------------------------------------------------------------ |
-| <img src="/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/docker/docker.assets/image-20240916111409146.png" alt="image-20240916111409146" style="zoom:50%;" /> |
+| <img src="./docker.assets/image-20240916111409146.png" alt="image-20240916111409146" style="zoom:50%;" /> |
 
 > 一个dockerFile里面两个app公用一个系统和环境，那么打包后占用的空间不会包涵系统和环境。
 
@@ -385,7 +385,7 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 
 | 上官方，下自制                                               |
 | ------------------------------------------------------------ |
-| ![image-20240916111836497](/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/docker/docker.assets/image-20240916111836497.png) |
+| <img src="./docker.assets/image-20240916111836497.png" alt="image-20240916111836497" style="zoom:50%;" /> |
 
 > 只有第一句不同
 
@@ -393,7 +393,7 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 
 | docker image inspect nginx(mynginx)，上官方，下自制          |
 | ------------------------------------------------------------ |
-| ![image-20240916112225021](/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/docker/docker.assets/image-20240916112225021.png) |
+| ![image-20240916112225021](./docker.assets/image-20240916112225021.png) |
 
 > 自制的只多了一层
 
@@ -401,13 +401,11 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 
 其实在查看容器的时候也能看出区别
 
-| 查看容器 -s   size                                           |
+| 查看容器 -s (size)                                           |
 | ------------------------------------------------------------ |
-| ![image-20240916113203475](/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/docker/docker.assets/image-20240916113203475.png) |
+| ![image-20240916113203475](./docker.assets/image-20240916113203475.png) |
 
 圈起来的就是自己修改单独分层的部份所占用的大小，后面虚拟部份就是公用的
 
 拿第一个举例：nginx启动，他的镜像容器占了188M。而容器内自己自定义的读写层只有1.09k，假设对容器做了大量修改，那么还会持续上涨。
-
-
 

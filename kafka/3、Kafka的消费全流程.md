@@ -41,15 +41,13 @@ import java.util.concurrent.Executors;
  * 类说明：多线程下使用生产者
  */
 public class KafkaConProducer {
-
     //发送消息的个数
     private static final int MSG_SIZE = 1000;
     //负责发送消息的线程池
-    private static ExecutorService executorService = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors());
+    private static ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private static CountDownLatch countDownLatch  = new CountDownLatch(MSG_SIZE);
 
-    private static User makeUser(int id){
+    private static User makeUser(int id) {
         User user = new User(id);
         String userName = "msb_"+id;
         user.setName(userName);
@@ -58,7 +56,6 @@ public class KafkaConProducer {
 
     /*发送消息的任务*/
     private static class ProduceWorker implements Runnable{
-
         private ProducerRecord<String,String> record;
         private KafkaProducer<String,String> producer;
 
@@ -206,17 +203,59 @@ public class KafkaConConsumer {
 
 **组协调器是Kafka服务端自身维护的。**
 
-组协调器( **GroupCoordinator** )可以理解为各个消费者协调器的一个中央处理器, 每个消费者的所有交互都是和组协调器( **GroupCoordinator** )进行的。
+组协调器(**GroupCoordinator**)可以理解为`各个消费者协调器的一个中央处理器`, 每个消费者的所有交互都是和组协调器进行的。
 
-1. 选举Leader消费者客户端
-2. 处理申请加入组的客户端
-3. 再平衡后同步新的分配方案
-4. 维护与客户端的心跳检测
-5. 管理消费者已消费偏移量,并存储至 `__consumer_offset`中
+选举Leader消费者客户端
 
-**kafka上的组协调器( GroupCoordinator )协调器有很多**，有多少个 `__consumer_offset`分区, 那么就有多少个组协调器。
+**组协调器的主要职责：**
 
-默认情况下, `__consumer_ offset`有50个分区, 每个消费组都会对应其中的一个分区，对应的逻辑为 hash(`group.id`)%分区数。
+1. **消费者群组的加入与离开**
+
+   - 当一个消费者启动并想要加入某个消费者群组时，它会向 Kafka 集群中的组协调器发送请求。组协调器会将该消费者加入群组，并决定它消费哪些分区。
+   - 如果某个消费者崩溃或主动离开群组，组协调器会接收到该事件，并通过重新平衡（rebalance）将该消费者原先消费的分区分配给其他消费者。
+
+2. **分配分区**
+
+   - 组协调器负责将分区分配给消费者群组中的各个消费者。根据消费者数量和分区数量，协调器会决定每个消费者需要消费哪些分区。
+   - 分区的分配是动态的，如果群组内的消费者数量或分区数量发生变化，组协调器会进行再平衡（rebalance）。
+
+3. **管理消费者的偏移量**
+
+   - 消费者会定期向组协调器提交其当前的消费偏移量（即已消费到消息的位置信息）。这样，Kafka 可以确保在消费者故障或重启时，消费者能够从正确的位置继续消费。
+
+   - 偏移量一般会被保存在 Kafka 内置的主题 `__consumer_offsets` 中，由组协调器管理。
+
+     - **kafka上的组协调器有很多**，有多少个 `__consumer_offset`分区, 那么就有多少个组协调器。
+
+       默认情况下, `__consumer_ offset`有50个分区, 每个消费组都会对应其中的一个分区，对应的逻辑为 hash(`group.id`)%分区数。
+
+4. **负载均衡（Rebalance）**
+
+   - 每当消费者数量发生变化（例如某个消费者加入或退出群组）时，组协调器会启动负载均衡（rebalance）过程。在这个过程中，消费者群组中的分区会被重新分配，以确保每个消费者负担合理。
+   - ==负载均衡通常会导致消费者在某段时间内暂停消费消息==，直到新的分区分配完成。
+
+5. **处理消费者的心跳**
+
+   - 为了确保消费者仍然活跃，组协调器会定期接收每个消费者的“心跳”信号。如果某个消费者长时间未能发送心跳信号，组协调器会认为该消费者已失效并触发再平衡，将该消费者负责的分区分配给其他消费者。
+
+     
+
+**组协调器的工作流程：**
+
+1. **消费者启动并加入群组：**
+   - 消费者启动时，会向 Kafka 集群中的组协调器发送请求，申请加入某个消费者群组。
+   - 组协调器接收到加入请求后，会检查群组内当前的消费者和分区信息，并将分区分配给新的消费者。
+2. **负载均衡（Rebalance）：**
+   - 如果消费者群组内的消费者数量变化（例如，新消费者加入或已有消费者退出），组协调器会启动负载均衡操作，重新分配分区。
+   - 在负载均衡过程中，`消费者会被暂停消费`，直到新的分配完成。
+3. **消费者提交偏移量：**
+   - 消费者会定期向组协调器提交已消费消息的偏移量。组协调器将这些偏移量存储在内置的 `__consumer_offsets` 主题中，以便在消费者崩溃或重启时能够恢复消费。（提交是定期提交，但如果在这时候突然奔溃了怎么半？消费一半没提交的记录，机子重新恢复后不就又重新消费了？--答：消费者协调器自己本地也有对应的consumer_offsets保存当前的记录）
+4. **消费者心跳与失效检测：**
+   - 消费者会定期向组协调器发送心跳信号，确认自己仍然活跃。如果心跳超时，组协调器会认为该消费者已失效，触发再平衡，将其分配的分区分配给其他消费者。
+
+
+
+
 
 ## 二、消费者协调器
 
@@ -230,15 +269,10 @@ public class KafkaConConsumer {
 
 ## 三、消费者加入分组的流程
 
-1、客户端启动的时候, 或者重连的时候会发起JoinGroup的请求来申请加入的组中。
-
-2、当前客户端都已经完成JoinGroup之后, 客户端会收到JoinGroup的回调, 然后客户端会再次向组协调器发起SyncGroup的请求来获取新的分配方案
-
-3、1)当消费者客户端关机/异常 时, 会触发离组LeaveGroup请求。2)当然有主动的消费者协调器发起离组请求，也有组协调器一直会有针对每个客户端的心跳检测, 如果监测失败,则就会将这个客户端踢出Group。
-
-4、客户端加入组内后, 会一直保持一个心跳线程,来保持跟组协调器的一个感知。
-
-并且组协调器会针对每个加入组的客户端做一个心跳监测，如果监测到过期, 则会将其踢出组内并再平衡。
+1. 客户端启动的时候, 或者重连的时候会发起JoinGroup的请求来申请加入的组中。
+2. 当前客户端都已经完成JoinGroup之后, 客户端会收到JoinGroup的回调, 然后客户端会再次向组协调器发起SyncGroup的请求来获取新的分配方案
+3. 1)当消费者客户端关机/异常 时, 会触发离组LeaveGroup请求。2)当然有主动的消费者协调器发起离组请求，也有组协调器一直会有针对每个客户端的心跳检测, 如果监测失败,则就会将这个客户端踢出Group。
+4. 客户端加入组内后, 会一直保持一个心跳线程,来保持跟组协调器的一个感知。并且组协调器会针对每个加入组的客户端做一个心跳监测，如果监测到过期, 则会将其踢出组内并再平衡。
 
 ## 四、消费者消费的offset的存储
 
