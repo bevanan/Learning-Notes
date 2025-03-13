@@ -199,7 +199,7 @@ $ kubectl exec -it myapp -c redis -- sh
 
 `标签由键值对组成`，其有效标签值：
 
-- 必须为少于 63 个字符（包含63，可以为空）
+- 必须为>=63 个字符（可以为空）
 - 除非标签值为空，必须以字母数字字符（`[a-z0-9A-Z]`）开头和结尾
 - 包含破折号（`-`）、下划线（`_`）、点（`.`）和字母或数字
 
@@ -1006,12 +1006,12 @@ metadata:
   labels:
     env: nginx
 spec:
+  nodeSelector:
+    disktype: ssd  # 选择节点为标签为 ssd 的节点
   containers:
   - name: nginx
     image: nginx:1.19
     imagePullPolicy: IfNotPresent
-  nodeSelector:
-    disktype: ssd  # 选择节点为标签为 ssd 的节点
 ```
 
 #### 8.3 根据节点名称指派 pod 到指定节点[nodeName]

@@ -436,12 +436,9 @@ public class UserLogProxy implements MethodInterceptor {
      * @return: java.lang.Object
      */
     @Override
-    public Object intercept(Object o, Method method, Object[] args,
-                            MethodProxy methodProxy) throws Throwable {
-
+    public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
         System.out.println(formatter.format(calendar.getTime()) + " [" +method.getName() + "] 查询用户信息...]");
 
         Object result = methodProxy.invokeSuper(o, args);
@@ -477,7 +474,7 @@ public class Client {
 
 * jdk代理和CGLIB代理
 
-  使用CGLib实现动态代理，CGLib底层采用ASM字节码生成框架，使用字节码技术生成代理类，在JDK1.6之前比使用Java反射效率要高。唯一需要注意的是，CGLib不能对声明为final的类或者方法进行代理，因为CGLib原理是动态生成被代理类的子类。
+  使用CGLib实现动态代理，**CGLib底层采用ASM字节码生成框架**，使用字节码技术生成代理类，在JDK1.6之前比使用Java反射效率要高。唯一需要注意的是，CGLib不能对声明为final的类或者方法进行代理，因为CGLib原理是动态生成被代理类的子类。
 
   在JDK1.6、JDK1.7、JDK1.8逐步对JDK动态代理优化之后，在调用次数较少的情况下，JDK代理效率高于CGLib代理效率，只有当进行大量调用的时候，JDK1.6和JDK1.7比CGLib代理效率低一点，但是到JDK1.8的时候，JDK代理效率高于CGLib代理。所以如果有接口使用JDK动态代理，如果没有接口使用CGLIB代理。
 
@@ -792,7 +789,9 @@ public void test02() {
 
 
 
-在软件设计中,装饰器模式是一种用于替代继承的技术,它通过一种无须定义子类的方式给对象动态的增加职责,使用对象之间的关联关系取代类之间的继承关系.
+在软件设计中,装饰器模式是一种用于**替代继承**的技术,它通过一种无须定义子类的方式给对象动态的增加职责,使用对象之间的关联关系取代类之间的继承关系.
+
+装饰器的核心思想是“**动态扩展功能**”，不直接修改原始类的代码，而是通过组合和封装的方式，在运行时为对象添加新的行为或职责。
 
 ### 5.3.2 装饰器模式原理
 
@@ -988,14 +987,12 @@ public class EncryptionDataDecorator extends DataLoaderDecorator {
         super.write(encode(data));
     }
 
-
     //加密操作
     private String encode(String data) {
         try {
              Base64.Encoder encoder = Base64.getEncoder();
              byte[] bytes = data.getBytes("UTF-8");
              String result = encoder.encodeToString(bytes);
-
              return result;
         } catch (Exception e) {
             e.printStackTrace();
@@ -1009,7 +1006,6 @@ public class EncryptionDataDecorator extends DataLoaderDecorator {
             Base64.Decoder decoder = Base64.getDecoder();
             String result = new String(decoder.decode(data), "UTF-8");
             return result;
-
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -1023,7 +1019,6 @@ public class EncryptionDataDecorator extends DataLoaderDecorator {
 ```java
 public class TestDecorator {
     public static void main(String[] args) {
-
         String info = "name:tom,age:15";
         DataLoaderDecorator decorator = new EncryptionDataDecorator(new BaseFileDataLoader("demo.txt"));
         decorator.write(info);
@@ -1034,7 +1029,71 @@ public class TestDecorator {
 }
 ```
 
+**例子2**
 
+假设我们有一个饮料类，我们希望在不修改原始类的情况下给它加上不同的调料（比如牛奶、糖等）。这个场景非常适合使用装饰器模式。
+
+```java
+// Component
+interface Beverage {
+    double cost(); // 计算饮料的价格
+}
+
+// ConcreteComponent
+class Coffee implements Beverage {
+    @Override
+    public double cost() {
+        return 5.0; // 咖啡的基础价格
+    }
+}
+
+// Decorator
+abstract class BeverageDecorator   {
+    protected Beverage beverage;
+    
+    public BeverageDecorator(Beverage beverage) {
+        this.beverage = beverage;
+    }
+}
+
+// ConcreteDecorator 1
+class MilkDecorator extends BeverageDecorator {
+    public MilkDecorator(Beverage beverage) {
+        super(beverage);
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost() + 1.0; // 加牛奶的额外费用
+    }
+}
+
+// ConcreteDecorator 2
+class SugarDecorator extends BeverageDecorator {
+    public SugarDecorator(Beverage beverage) {
+        super(beverage);
+    }
+
+    @Override
+    public double cost() {
+        return beverage.cost() + 0.5; // 加糖的额外费用
+    }
+}
+
+// 测试代码
+public class Main {
+    public static void main(String[] args) {
+        Beverage coffee = new Coffee();
+        System.out.println("基础咖啡价格: " + coffee.cost());
+
+        coffee = new MilkDecorator(coffee); // 给咖啡加牛奶
+        System.out.println("加牛奶的咖啡价格: " + coffee.cost());
+
+        coffee = new SugarDecorator(coffee); // 再加糖
+        System.out.println("加牛奶和糖的咖啡价格: " + coffee.cost());
+    }
+}
+```
 
 ### 5.3.4 装饰器模式总结
 
@@ -1070,7 +1129,7 @@ public class TestDecorator {
 
 适配器模式是用来做适配，它将不兼容的接口转换为可兼容的接口，让原本由于接口不兼容而不能一起工作的类可以一起工作。适配器模式有两种实现方式：类适配器和对象适配器。其中，类适配器使用继承关系来实现，对象适配器使用组合关系来实现。
 
-类适配器模式的耦合度比后者高，且要求程序员了解现有组件库中的相关组件的内部结构，所以应用相对较少些。
+**类适配器模式的耦合度比后者高，且要求程序员了解现有组件库中的相关组件的内部结构，所以应用相对较少些。**
 
 ### 5.4.2 适配器模式原理
 
@@ -1088,7 +1147,7 @@ public class TestDecorator {
 
 #### 5.4.3.1 类适配器模式
 
-假设现有一台电脑目前只能读取SD卡的信息，这时我们想要使用电脑读取TF卡的内容, 就需要将TF卡加上卡套，转换成SD卡!
+假设现有一台电脑目前**只能读取**SD卡的信息，这时我们想要使用电脑读取TF卡的内容, 就需要将TF卡加上卡套，转换成SD卡!
 
 创建一个读卡器，将TF卡中的内容读取出来。
 
@@ -1101,11 +1160,8 @@ public class TestDecorator {
 ```java
 /**
  * SD卡接口
- * @author spikeCong
- * @date 2022/9/28
  **/
 public interface SDCard {
-
     //读取SD卡方法
     String readSD();
     //写入SD卡功能
@@ -1114,8 +1170,6 @@ public interface SDCard {
 
 /**
  * SD卡实现类
- * @author spikeCong
- * @date 2022/9/28
  **/
 public class SDCardImpl implements SDCard {
     @Override
@@ -1132,11 +1186,8 @@ public class SDCardImpl implements SDCard {
 
 /**
  * TF卡接口
- * @author spikeCong
- * @date 2022/9/28
  **/
 public interface TFCard {
-
     //读取TF卡方法
     String readTF();
     //写入TF卡功能
@@ -1145,14 +1196,10 @@ public interface TFCard {
 
 /**
  * TF卡实现类
- * @author spikeCong
- * @date 2022/9/28
  **/
 public class TFCardImpl implements TFCard {
-
     @Override
     public String readTF() {
-
         String msg = "tf card reading data";
         return msg;
     }
@@ -1165,11 +1212,8 @@ public class TFCardImpl implements TFCard {
 
 /**
  * 定义适配器类(SD兼容TF)
- * @author spikeCong
- * @date 2022/9/28
  **/
 public class SDAdapterTF extends  TFCardImpl implements SDCard{
-
     @Override
     public String readSD() {
         System.out.println("adapter read tf card ");
@@ -1184,9 +1228,7 @@ public class SDAdapterTF extends  TFCardImpl implements SDCard{
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
         Computer computer = new Computer();
         SDCard sdCard = new SDCardImpl();
         System.out.println(computer.read(sdCard));
@@ -1212,7 +1254,6 @@ public class Client {
 
 ```java
 public class SDAdapterTF implements SDCard{
-
     private TFCard tfCard;
 
     public SDAdapterTF(TFCard tfCard) {
@@ -1232,11 +1273,8 @@ public class SDAdapterTF implements SDCard{
     }
 }
 
-
 public class Client {
-
     public static void main(String[] args) {
-
         Computer computer = new Computer();
         SDCard sdCard = new SDCardImpl();
         System.out.println(computer.read(sdCard));
@@ -1297,6 +1335,8 @@ public class Client {
 
 - 适配器模式：将一个类的接口转换为客户希望的另一个接口.适配器模式让那些不兼容的类可以一起工作.
 
+
+
 ## 5.5 外观模式
 
 ### 5.5.1 外观模式介绍
@@ -1329,34 +1369,29 @@ public class Client {
 
 ```java
 public class SubSystemA {
-
     public void methodA(){
         //业务代码
     }
 }
 
 public class SubSystemB {
-
     public void methodB(){
         //业务代码
     }
 }
 
 public class SubSystemC {
-
     public void methodC(){
         //业务代码
     }
 }
 
 public class Facade {
-
     private SubSystemA obj1 = new SubSystemA();
     private SubSystemB obj2 = new SubSystemB();
     private SubSystemC obj3 = new SubSystemC();
 
     public void method(){
-
         obj1.methodA();
         obj2.methodB();
         obj3.methodC();
@@ -1364,9 +1399,7 @@ public class Facade {
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
         Facade facade = new Facade();
         facade.method();
     }
@@ -1389,50 +1422,38 @@ public class Client {
 
 ```java
 public class Light {
-
     public void on(){
-
         System.out.println("打开灯......");
     }
 
     public void off(){
-
         System.out.println("关闭灯......");
     }
 }
 
 public class TV {
-
     public void on(){
-
         System.out.println("打开电视......");
     }
 
     public void off(){
-
         System.out.println("关闭电视......");
     }
 }
 
 public class AirCondition {
-
     public void on(){
-
         System.out.println("打开空调......");
     }
 
     public void off(){
-
         System.out.println("关闭空调......");
     }
 }
 
 public class SmartAppliancesFacade {
-
     private Light light;
-
     private TV tv;
-
     private AirCondition airCondition;
 
     public SmartAppliancesFacade() {
@@ -1449,9 +1470,7 @@ public class SmartAppliancesFacade {
         }else{
             System.out.println("对不起没有听清楚您说什么! 请重新再说一遍");
         }
-
     }
-
 
     //起床后 语音开启 电灯 电视 空调
     private void on() {
@@ -1471,9 +1490,7 @@ public class SmartAppliancesFacade {
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
         //创建外观对象
         SmartAppliancesFacade facade = new SmartAppliancesFacade();
 
@@ -1559,24 +1576,18 @@ public class Client {
 ```java
 /**
  * 抽象根节点
- *      对于客户端而言将针对抽象编程,无需关心其具体子类是容器构件还是叶子构件.
- * @author spikeCong
- * @date 2022/10/6
+ * 对于客户端而言将针对抽象编程,无需关心其具体子类是容器构件还是叶子构件.
  **/
 public abstract class Component {
-
     public abstract void add(Component c); //增加成员
     public abstract void remove(Component c); //删除成员
     public abstract Component getChild(int i); //获取成员
     public abstract void operation(); //业务方法
-
 }
 
 /**
  * 叶子节点
- *      叶子节点中不能包含子节点
- * @author spikeCong
- * @date 2022/10/6
+ * 叶子节点中不能包含子节点
  **/
 public class Leaf extends Component {
     @Override
@@ -1603,12 +1614,9 @@ public class Leaf extends Component {
 
 /**
  * 树枝节点
- *      容器对象,可以包含子节点
- * @author spikeCong
- * @date 2022/10/6
+ * 容器对象,可以包含子节点
  **/
 public class Composite extends Component {
-
     private ArrayList<Component> list = new ArrayList<>();
 
     @Override
@@ -1651,18 +1659,12 @@ Entry类: 抽象类,用来定义File类和Directory类的共性内容
 ```java
 /**
  * Entry抽象类,表示目录条目(文件+文件夹)的抽象类
- * @author spikeCong
- * @date 2022/10/6
  **/
 public abstract class Entry {
-
     public abstract String getName(); //获取文件名
-
     public abstract int getSize(); //获取文件大小
-
     //添加文件夹或文件
     public abstract Entry add(Entry entry);
-
     //显示指定目录下的所有信息
     public abstract void printList(String prefix);
 
@@ -1678,11 +1680,8 @@ File类,叶子节点,表示文件.
 ```java
 /**
  * File类 表示文件
- * @author spikeCong
- * @date 2022/10/6
  **/
 public class File extends Entry {
-
     private String name; //文件名
     private int size; //文件大小
 
@@ -1708,10 +1707,8 @@ public class File extends Entry {
 
     @Override
     public void printList(String prefix) {
-
         System.out.println(prefix + "/" + this);
     }
-
 }
 ```
 
@@ -1720,14 +1717,10 @@ Directory类,树枝节点,表示文件
 ```java
 /**
  * Directory表示文件夹
- * @author spikeCong
- * @date 2022/10/6
  **/
 public class Directory extends Entry{
-
     //文件的名字
     private String name;
-
     //文件夹与文件的集合
     private ArrayList<Entry> directory = new ArrayList();
 
@@ -1779,9 +1772,7 @@ public class Directory extends Entry{
 
 ```java
 public class Client {
-
     public static void main(String[] args) {
-
         //根节点
         Directory rootDir = new Directory("root");
 
@@ -1807,8 +1798,6 @@ public class Client {
     }
 }
 ```
-
-
 
 ### 5.6.5 组合模式总结
 
@@ -1837,7 +1826,7 @@ public class Client {
 
 **3 ) 组合模式的缺点**
 
-- 使用组合模式的前提在于，你的业务场景必须能够表示成树形结构。所以，组合模式的应用场景也 比较局限，它并不是一种很常用的设计模式。
+- 使用组合模式的前提在于，你的**业务场景必须能够表示成树形结构**。所以，组合模式的应用场景也 比较局限，它并不是一种很常用的设计模式。
 
 **4 ) 组合模式使用场景分析**
 
@@ -1853,9 +1842,9 @@ public class Client {
 
 ### 5.7.1 享元模式介绍
 
-享元模式 (flyweight pattern) 的原始定义是：摒弃了在每个对象中保存所有数据的方式，通过共享多个对象所共有的相同状态，从而让我们能在有限的内存容量中载入更多对象。
+享元模式 (flyweight pattern) 的原始定义是：摒弃了在每个对象中保存所有数据的方式，通过共享多个对象所共有的相同状态，从而让我们能在**有限的内存容量**中载入更多对象。
 
-从这个定义中你可以发现，享元模式要解决的核心问题就是节约内存空间，使用的办法是找出相似对象之间的共有特征，然后复用这些特征。所谓“享元”，顾名思义就是被共享的单元。
+从这个定义中你可以发现，享元模式要解决的核心问题就是**节约内存空间**，使用的办法是找出相似对象之间的共有特征，然后复用这些特征。所谓“享元”，顾名思义就是被**共享的单元**。
 
 比如: 一个文本字符串中存在很多重复的字符,如果每一个字符都用一个单独的对象来表示,将会占用较多的内存空间,我们可以使用享元模式解决这一类问题.
 
@@ -1893,13 +1882,9 @@ public class Client {
 ```java
 /**
  * 抽象享元类
- * @author spikeCong
- * @date 2022/10/10
  **/
 public abstract class Flyweight {
-
     public abstract void operation(String extrinsicState);
-
 }
 ```
 
@@ -1908,11 +1893,8 @@ public abstract class Flyweight {
 ```java
 /**
  * 可共享-具体享元类
- * @author spikeCong
- * @date 2022/10/10
  **/
 public class ConcreteFlyweight extends Flyweight {
-
     //内部状态 intrinsicState作为成员变量,同一个享元对象的内部状态是一致的
     private String intrinsicState;
 
@@ -1937,17 +1919,13 @@ public class ConcreteFlyweight extends Flyweight {
 ```java
 /**
  * 非共享具体享元类
- * @author spikeCong
- * @date 2022/10/10
  **/
 public class UnsharedConcreteFlyweight extends Flyweight {
-
     private String intrinsicState;
 
     public UnsharedConcreteFlyweight(String intrinsicState) {
         this.intrinsicState = intrinsicState;
     }
-
 
     @Override
     public void operation(String extrinsicState) {
@@ -1963,14 +1941,11 @@ public class UnsharedConcreteFlyweight extends Flyweight {
  * 享元工厂类
  *      作用: 作为存储享元对象的享元池.用户获取享元对象时先从享元池获取,有则返回,没有创建新的
  *      享元对象返回给用户,并在享元池中保存新增的对象.
- * @author spikeCong
- * @date 2022/10/10
  **/
 public class FlyweightFactory {
-
     //定义一个HashMap用于存储享元对象,实现享元池
     private Map<String,Flyweight> pool = new HashMap();
-
+    
     public FlyweightFactory() {
         //添加对应的内部状态
         pool.put("A",new ConcreteFlyweight("A"));
@@ -1984,7 +1959,6 @@ public class FlyweightFactory {
         if(pool.containsKey(key)){
             System.out.println("===享元池中存在,直接复用,key:" + key);
             return pool.get(key);
-
         }else{
             //如果对象不存在,先创建一个新的对象添加到享元池中,然后返回
             System.out.println("===享元池中不存在,创建并复用,key:" + key);
@@ -2011,13 +1985,9 @@ public class FlyweightFactory {
 ```java
 /**
  * 抽象享元类: 五子棋类
- * @author spikeCong
- * @date 2022/10/10
  **/
 public abstract class GobangFlyweight {
-
     public abstract String getColor();
-
     public void display(){
         System.out.println("棋子颜色: " + this.getColor());
     }
@@ -2025,11 +1995,8 @@ public abstract class GobangFlyweight {
 
 /**
  * 共享享元类-白色棋子
- * @author spikeCong
- * @date 2022/10/10
  **/
 public class WhiteGobang extends GobangFlyweight{
-
     @Override
     public String getColor() {
         return "白色";
@@ -2038,11 +2005,8 @@ public class WhiteGobang extends GobangFlyweight{
 
 /**
  * 共享享元类-黑色棋子
- * @author spikeCong
- * @date 2022/10/10
  **/
 public class BlackGobang extends GobangFlyweight {
-
     @Override
     public String getColor() {
         return "黑色";
@@ -2051,13 +2015,9 @@ public class BlackGobang extends GobangFlyweight {
 
 /**
  * 享元工厂类-生产围棋棋子,使用单例模式进行设计
- * @author spikeCong
- * @date 2022/10/10
  **/
 public class GobangFactory {
-
     private static GobangFactory factory = new GobangFactory();
-
     private static Map<String,GobangFlyweight> pool;
 
     //设置共享对象的内部状态,在享元对象中传递
@@ -2086,9 +2046,7 @@ public class GobangFactory {
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
         //获取享元工厂对象
         GobangFactory instance = GobangFactory.getInstance();
 
@@ -2113,7 +2071,7 @@ public class Client {
 }
 ```
 
-三颗黑子(两颗白子)对象比较之后内存地址都是一样的.说明它们是同一个对象.在实现享元模式时使用了单例模式和简单工厂模式,保证了享元工厂对象的唯一性,并提供工厂方法向客户端返回享元对象.
+三颗黑子(两颗白子)对象比较之后内存地址**都是一样的**.说明它们是同一个对象.在实现享元模式时使用了单例模式和简单工厂模式,保证了享元工厂对象的唯一性,并提供工厂方法向客户端返回享元对象.
 
 ### 5.7.5 享元模式总结
 
@@ -2139,21 +2097,16 @@ public class Client {
 
   ```java
   public class Test1 {
-  
       public static void main(String[] args) {
           Integer i1 = 127;
           Integer i2 = 127;
-  
           System.out.println("i1和i2对象是否是同一个对象？" + (i1 == i2));
   
           Integer i3 = 128;
           Integer i4 = 128;
-  
           System.out.println("i3和i4对象是否是同一个对象？" + (i3 == i4));
       }
-     
   }
-  
   
   //传入的值在-128 - 127 之间,直接从缓存中返回
   public static Integer valueOf(int i) {
@@ -2162,8 +2115,8 @@ public class Client {
       return new Integer(i);
   }
   ```
-
+  
   可以看到 `Integer` 默认先创建并缓存 `-128 ~ 127` 之间数的 `Integer` 对象，当调用 `valueOf` 时如果参数在 `-128 ~ 127` 之间则计算下标并从缓存中返回，否则创建一个新的 `Integer` 对象。
-
+  
   其实享元模式本质上就是找到对象的不可变特征，并缓存起来，当类似对象使用时从缓存中读取，以达到节省内存空间的目的。
 

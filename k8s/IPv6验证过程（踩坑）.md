@@ -175,49 +175,48 @@ from EE_EXEC_CMD_SCRIPT ecs Left Join EE_EXEC_SCRIPT es
 
     ```shell
     sudo rm -rf /etc/containerd/* \
-                      sudo rm -rf /var/lib/sealos/data/* \
-                      sudo rm -rf  /root/registry \
-                      sudo rm -rf  /var/lib/registry \
-                      sudo rm -rf /var/lib/registry \
-                      sudo rm -rf /etc/registry \
-                      sudo rm -rf /etc/registry.yml \
-                      systemctl stop kubelet \
-                      systemctl daemon-reload \
-                      systemctl stop kube-apiserver.service \
-                      systemctl stop kube-controller-manager.service \
-                      systemctl stop kube-proxy.service \
-                      systemctl stop kube-scheduler.service \
-                      systemctl disable kube-apiserver.service \
-                      systemctl disable kube-controller-manager.service \
-                      systemctl disable kube-proxy.service \
-                      systemctl disable kube-scheduler.service \
-                      sudo rm -rf  /usr/bin/buildah \
-                      sudo rm -rf /usr/bin/conntrack \
-                      sudo rm -rf /usr/bin/kubelet-pre-start.sh \
-                      sudo rm -f sudo /usr/bin/kubelet-post-stop.sh \
-                      sudo rm -rf /usr/bin/kubeadm \
-                      sudo rm -rf /usr/bin/kubectl \
-                      sudo rm -rf /usr/bin/kubelet \
-                      sudo rm -rf /etc/sysctl.d/k8s.conf \
-                      sudo rm -rf /etc/systemd/system/kubelet.service \
-                      sudo rm -rf /etc/systemd/system/kubelet.service.d \
-                      systemctl stop image-cri-shim \
-                      systemctl disable image-cri-shim \
-                      sudo rm -rf /etc/systemd/system/image-cri-shim.service \
-                      systemctl daemon-reload \
-                      sudo rm -rf /usr/bin/image-cri-shim \
-                      sudo rm -rf /etc/crictl.yaml \
-                      sudo rm -rf /etc/image-cri-shim.yaml \
-                      sudo rm -rf /var/lib/image-cri-shim \
-                      sudo rm -rf /etc/kubernetes \
-                      sudo rm -rf /var/lib/etcd 
+    sudo rm -rf /var/lib/sealos/data/* \
+    sudo rm -rf  /root/registry \
+    sudo rm -rf  /var/lib/registry \
+    sudo rm -rf /var/lib/registry \
+    sudo rm -rf /etc/registry \
+    sudo rm -rf /etc/registry.yml \
+    systemctl stop kubelet \
+    systemctl daemon-reload \
+    systemctl stop kube-apiserver.service \
+    systemctl stop kube-controller-manager.service \
+    systemctl stop kube-proxy.service \
+    systemctl stop kube-scheduler.service \
+    systemctl disable kube-apiserver.service \
+    systemctl disable kube-controller-manager.service \
+    systemctl disable kube-proxy.service \
+    systemctl disable kube-scheduler.service \
+    sudo rm -rf  /usr/bin/buildah \
+    sudo rm -rf /usr/bin/conntrack \
+    sudo rm -rf /usr/bin/kubelet-pre-start.sh \
+    sudo rm -f sudo /usr/bin/kubelet-post-stop.sh \
+    sudo rm -rf /usr/bin/kubeadm \
+    sudo rm -rf /usr/bin/kubectl \
+    sudo rm -rf /usr/bin/kubelet \
+    sudo rm -rf /etc/sysctl.d/k8s.conf \
+    sudo rm -rf /etc/systemd/system/kubelet.service \
+    sudo rm -rf /etc/systemd/system/kubelet.service.d \
+    systemctl stop image-cri-shim \
+    systemctl disable image-cri-shim \
+    sudo rm -rf /etc/systemd/system/image-cri-shim.service \
+    systemctl daemon-reload \
+    sudo rm -rf /usr/bin/image-cri-shim \
+    sudo rm -rf /etc/crictl.yaml \
+    sudo rm -rf /etc/image-cri-shim.yaml \
+    sudo rm -rf /var/lib/image-cri-shim \
+    sudo rm -rf /etc/kubernetes \
+    sudo rm -rf /var/lib/etcd 
     
     #{pf_step_msg}:判断kubelet、kube-proxy进程是否存活"
     ps -ef | grep kube-proxy | grep -v grep | awk '{print $2}' && ps -ef | grep kubelet | grep -v grep | awk '{print $2}'
     
     #{pf_step_msg}:清理进程(kubelet、kube-proxy)
     ps aux|grep kube|grep -v grep |awk '{print $2}'|xargs kill -9 
-    
     
     sudo systemctl stop containerd
     
@@ -238,27 +237,29 @@ from EE_EXEC_CMD_SCRIPT ecs Left Join EE_EXEC_SCRIPT es
     sudo rm -f /lib/systemd/system/containerd.service
     
     ```
-
+    
     重复执行需要清空 
-
+    
     - `sealos delete --nodes 10.1.12.236 --cluster wu9a3duzktct`（旧版本）
-
-    - `sealos reset --masters 10.1.12.122 --nodes 10.1.12.172 --cluster fortest --force`（新版本）
+    
+    - `sealos reset --masters 10.1.12.172 --nodes 10.1.12.234 --cluster fortest1111 --force`（新版本）
       
       - 执行结果如果直接几行，那再部署就会失败
       - 执行结果如果有很多行，再部署就能成功
       
+    - sealos reset --masters='10.1.12.172' --nodes='10.1.12.234' --cluster fortest1111 --force
+      
     - 看情况执行
-
+    
       ```shell
       # 清空sealos创建的hostsName
       sed -i "/"apiserver.cluster.local"/d" /etc/hosts
       sed -i "/"lvscare.node.ip"/d" /etc/hosts
       
       ```
-
+    
       
-
+    
   - sealos在执行ClusterFile的时候，里面的配置对应的master地址不能是当前执行的机子的ip `sealos apply -f Clusterfile`
     比如：当前执行的机子是174，那么Clusterfile里master不能是当前的174
 
@@ -692,11 +693,238 @@ sealos1: /usr/lib64/libc.so.6: version `GLIBC_2.32' not found (required by sealo
 
 
 
+2.17
+
+周一：还是停留在action上，升版本降下来的来回尝试，还是不可行
+
+周二：早上通过dp询问后了解到，源码内有Makefile文件可以提供编译，先是在mac的idea上直接编译，但是出问题，而且默认版本还是arm的。所以现在挪到了自己的虚拟机上开始尝试。
+
+```shell
+make -f /root/cluster-file/sealos-5.0.0/Makefile -C /root/cluster-file/sealos-5.0.0 build
+make -f /root/cluster-file/sealos-5.0.0/Makefile -C /root/cluster-file/sealos-5.0.0 clean
+make -f /root/cluster-file/sealos-5.0.0/Makefile -dC /root/cluster-file/sealos-5.0.0 build.multiarch PLATFORMS="linux_amd64"
+
+make -f /root/cluster-file/sealos-5.0.0/Makefile -C /root/cluster-file/sealos-5.0.0 tools
+make -f /root/cluster-file/sealos-5.0.0/Makefile -C /root/cluster-file/sealos-5.0.0 gen
+
+make build BINS="sealos" PLATFORMS="linux_arm64 linux_amd64"
+
+make -f /root/cluster-file/sealos-5.0.0/Makefile -C /root/cluster-file/sealos-5.0.0 gen V=1
+```
+
+周三：换成自己的虚拟机测试，发现还是老毛病，他不愿意变动，一直出现的是DeepCode-gen错误，就有点像版本没对上的感觉，但是却一直解决不了。
+
+周四：友龙哥介入，先fork了5.0的代码，但是最后的action，问题一样，
+
+周五：这次fork的时候把仅fork main取消了，然后action构建的二进制文件可以执行。提交自己的代码做测试，可行。
+
+
+
+2.24
+
+周一：每次上传调试，测试修改仓库地址后，使用以往的k8s版本是否能成功部署起来，后来发现那个地址实质是在k8s内部自己调用的，修改无果，只能继续使用sealos提供的k8s
+
+```shell
+rm -f /root/cluster-file/sealos \
+rm -f /bin/sealos1
+
+sudo cp /root/cluster-file/sealos /bin/sealos1 \
+cd /bin \
+chmod 755 sealos1
+
+```
+
+周二：linux创建不同账号，配置过程，需要对sudo进行全配置，否者每次执行sudo命令需要密码
+
+####   用户创建
+
+```shell
+sudo useradd -m bevanan  				# 创建用户及家目录
+echo "bevanan ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/bevanan  # sudo ALL 权限
+sudo chmod 440 /etc/sudoers.d/bevanan  	# 设置正确权限
+
+ssh-keygen -t rsa -b 4096  				# 按提示生成密钥，默认保存在~/.ssh/id_rsa
+ssh-keygen -t rsa -b 2048
+sudo passwd bevanan  					# 设置临时密码 newlanD181.
+ssh-copy-id bevanan@10.1.12.218			# 按提示输入临时密码(其他机子的用户免密到本机的用户)
+sudo passwd -d bevanan  				# 可选：删除密码，仅依赖密钥登录
+
+sudo -l  								# 查看bevanan的sudo权限
+sudo command  							# 执行命令无需密码
+```
+
+用新用户开始开始创建clusterfile，陆续遇到的问题
+
+```shell
+> --pk /root/.ssh/id_rsa --user=root --cluster fortest123  > /home/bevanan/cluster-file/Clusterfile
+Error: error parsing image name "//harbor.paas.nl:10081/paas_public/kube-system/kubernetes-sealos:v1.24.2": pinging container registry harbor.paas.nl:10081: Get "http://harbor.paas.nl:10081/v2/": dial tcp: lookup harbor.paas.nl on 192.168.30.2:53: no such host
+[bevanan@host826 ~]$ vi /etc/hosts
+```
+
+后续在使用3台新增的设备后设置用户bevanan，然后之间免密，在sealos gen 的时候使用bevanan用户，后续能正常部署，这让我中间研究actions和makefile就有点尴尬了，如果能走通，他就是一开始给我们了错误的方向。
+
+周三： 
+
+- 申请 等待局方的3台机子做最后的sealos在普通用户下是否能正常执行的验证。
+
+- 研究单独IPV6部署是否可行，sealos在gen的时候填写v6出错，不可行。开始改用江苏的部署方式。研究修改难度
+
+周四：
+
+- 开始动手调整脚本内容，以及数据库内的任务的执行流程。
+
+周五：将部署方式修改成二进制模式
+
+
+
+3.3
+
+本周：修改数据库流程、等待局方机子、测试部署过程、将江苏IPv6部分挪过来
+
+```sql
+INSERT INTO EE_EXEC_CMD (EXEC_CMD_ID, CMD_CODE, CMD_CATG, CMD_CNNAME, CMD_VERSION, CMD_DESC) 
+VALUES ('77C86F2E9C1DBF12E0530F08010AB99D', 'pf_ansible_deploy', 'k8sClu', 'k8s集群部署', '1', '参数：对象key=对象value')
+
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609CA457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '84FBb04C1AC5400AA139BC12460EC89B', 0, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609CB457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '6BA3bE691989354AA42ABE39B2CC87CE', 10, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609CC457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', 'F908b7EE80B73E23AFC70CCB621B3AD0', 20, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609CD457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '3CC3b947A35B337DAEF458E46ECDEAFD', 30, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609CE457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '7B04b85FE472393082E60E7C8E7057A9', 30, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609CF457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', 'A6FFb7E108B036519BF1A008BBD95901', 30, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D0457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '7CCEbABD84BA4E6EAC1EEC795E2E1BF9', 40, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D1457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '765Ab26CE49934479B345F3B445BBDE0', 50, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D2457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '1ECFb6F94225350BAE38515FBD841C3Z', 60, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D3457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', 'E9A0bCEA35DB35809282536B6DB8710Z', 70, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D4457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', 'A144bDFC44DF498F83FE2CAA2D7B4AAZ', 80, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D5457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '3982b5FA9AFD4E6C9C62CA542923FF7Z', 80, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D6457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '9E50b63D90C64A0F8084AB32632F5C4Z', 80, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D7457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '399CbDD01C8F4AA59B7EEF05419256CZ', 81, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D8457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '2FF4b0FDFB2B4E339F096B3A0E1C957Z', 80, 0, 'alone', 0);
+INSERT INTO EE_EXEC_CMD_SCRIPT(EXEC_CMD_SCRIPT_ID, EXEC_CMD_ID, EXEC_SCRIPT_ID, EXEC_ORDER, IS_ROLLBACK, EXEC_WAY, IS_FIXED) VALUES ('C9B8DAC609D9457FE055020C2941013w', '77C86F2E9C1DBF12E0530F08010AB99D', '12b4b8d21b3c46629e6jnde4e324805Z', 90, 0, 'alone', 0);
+
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('84FBb04C1AC5400AA139BC12460EC89B', '脚本准备', '/script/clu/installv3', null, 'com.newland.paas.paasservice.executeenginesvr.script.cluk8s.CluV3PrepareScript', 'com.newland.paas.paasservice.executeenginesvr.script.cluk8s.CluV3PrepareScript', 'javaClass', 0, 1000, 600000, 'PREFIX_ASC');
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('6BA3bE691989354AA42ABE39B2CC87CE', 'k8s集群部署-卸载', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/99.clean.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('F908b7EE80B73E23AFC70CCB621B3AD0', 'k8s集群部署-准备', '/script/clu/installv3', '/script/clu/install', 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/00.prepare.yml ', 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/99.clean.yml', 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('3CC3b947A35B337DAEF458E46ECDEAFD', 'k8s集群部署-keepalived', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/01.keepalived.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('7B04b85FE472393082E60E7C8E7057A9', 'k8s集群部署-etcd', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/02.etcd.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('A6FFb7E108B036519BF1A008BBD95901', 'k8s集群部署-containerd', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/91.containerd.yml', null, 'ansible', 0, 1000, 1200000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('7CCEbABD84BA4E6EAC1EEC795E2E1BF9', 'k8s集群部署-k8s-master', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/04.kube-master.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('765Ab26CE49934479B345F3B445BBDE0', 'k8s集群部署-k8s-node', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/05.kube-node.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('1ECFb6F94225350BAE38515FBD841C3Z', 'k8s集群部署-calico', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/06.calico-rr.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('E9A0bCEA35DB35809282536B6DB8710Z', 'k8s集群部署-kubedns', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/07.kubedns.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('A144bDFC44DF498F83FE2CAA2D7B4AAZ', 'k8s集群部署-更新kube-dns配置', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/11.kubedns.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('3982b5FA9AFD4E6C9C62CA542923FF7Z', 'k8s集群部署-prometheus', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/08.prometheus.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('9E50b63D90C64A0F8084AB32632F5C4Z', 'k8s集群部署-fluentd', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/10.fjfluentd.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('399CbDD01C8F4AA59B7EEF05419256CZ', 'k8s集群部署-eventrouter', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/13.eventrouter.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('2FF4b0FDFB2B4E339F096B3A0E1C957Z', 'k8s集群部署-安装插件', '/script/clu/installv3', null, 'ansible-playbook -i {localPath}/jobtmp/{jobId}/hosts -e @{localPath}/jobtmp/{jobId}/param.json {localPath}/jobtmp/{jobId}/12.plugins.yml', null, 'ansible', 0, 1000, 600000, null);
+INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT_UNDOFILE, EXEC_CMD, EXEC_UNDOCMD, SCRIPT_TYPE, RETRY_COUNT, RETRY_INVL_TIME, TIMEOUT, ROLLBACK_TYPE) VALUES ('12b4b8d21b3c46629e6jnde4e324805Z', 'k8s集群部署-证书返回', null, null, 'com.newland.paas.paasservice.executeenginesvr.script.cluk8s.CluInstallEndScript', null, 'javaClass', 0, 1000, 600000, null);
+
+```
 
 
 
 
-## 部署脚本
+
+3.10
+
+周一：验证二进制脚本，想debug执行引擎步骤，但是出现了，观测就会失败的问题。等待镜像上传完毕（arm和x86一同上传），尝试登入局方提供的3台机器，发现本地网络不可用。
+
+周二：
+
+- 上午尝试在玻璃房内登入对应的机器，不行。询问是否能配置什么隧道或者跳转机-2.17事故后，设为违规操作。后续小明哥那边得知可使用`10.47.202.140   bomc/As1!_BmWy2046(`机子做跳转，在工具上不知道怎么配置都失败了，但是最后还是登入在这台机子上然后通过`ssh paasopt@10.45.103.128`的方式跳转成功登入。
+
+- 开始通过这个方式对这些机子配置对应的sealos环境，以及免密操作。局方测试很快就将129 130 搭建了起来。问题也出现了
+
+  - 其中corndns启动失败，似乎是对应的镜像没有找到的问题
+
+  - 另一个是kubectl 命令虽然能执行，但是在paasopt用户下无法查看到集群。
+
+    ```shell
+    [paasopt@k8s-host21175 root]$ kubectl get nodes
+    The connection to the server localhost:8080 was refused - did you specify the right host or port?
+    ```
+
+    要加上sudo才能正常看到集群节点。开始猜测是什么原因
+
+    1. 集群给部署到了root上。然后paasopt没办法有效的查看到对应的节点
+
+周三：
+
+- 任务为：在本地环境（174）上通过install来部署（用paasopt用户），然后看看是否还会再出现这个问题。以及还是需要sudo权限的话，那就要排查会有什么影响。
+
+- 下午提供两台机子供我测试（21段的 175、176），开始修改paasopt的密码，将与root独立开。
+
+  ```shell
+  # 重制密码
+  [paasopt@k8s-host21175 root] sudo passwd paasopt
+  ```
+
+  然后在这个用户上在执行 kubectl get nodes，发现问题竟然一样，那就说明确实部署是部在了root上。
+
+  `kubectl` 在 `paasopt` 用户下无法连接集群，但通过 `sudo` 能正常工作，根本原因是 **`kubectl` 的配置文件（`kubeconfig`）的权限或路径问题**。
+
+  原因分析
+
+  1. 默认 kubeconfig 路径不同：
+     - 当以 `paasopt` 用户执行 `kubectl` 时，会尝试读取 ~/.kube/config（即 /home/paasopt/.kube/config）。
+     - 当以 `sudo` 执行时，会读取 `root` 用户的配置（/root/.kube/config）。
+  2. 配置文件权限问题：
+     - 如果集群部署时以 `root` 用户操作，生成的 `kubeconfig` 文件默认保存在 /root/.kube/config，且权限为 `600`（仅 `root` 可读）。
+     - `paasopt` 用户没有权限访问 /root/.kube/config，且其本地的 ~/.kube/config 可能不存在或配置错误。
+  3. 错误提示的含义：
+     - 表示 `kubectl` 没有找到有效的集群配置，回退到默认的本地连接（但 Kubernetes API 服务端未在本地运行）。
+
+  问题解决：
+
+  将 `root` 的配置复制到 `paasopt` 用户目录：
+
+  ```bash
+  sudo mkdir -p /home/paasopt/.kube
+  sudo cp /root/.kube/config /home/paasopt/.kube/
+  sudo chown -R paasopt:paasopt /home/paasopt/.kube
+  sudo chmod 600 /home/paasopt/.kube/config
+  ```
+
+
+
+周四：
+
+- 早上部署完执行引擎后发现174不断404，后面排查发现是250没空间了，通过crictl images 和 crictl rmi 清除了执行引擎的镜像后即可。 
+
+- 但是就是在这占满的期间，对应250节点里面的pod开始被驱逐（Evicted）了，例如片段：
+
+  ```shell
+  manage       resmgr-64696bf65b-z6c5r         0/1        Evicted         0        14m
+  manage       resmgr-64696bf65b-z6jwd         0/1        Evicted         0        7m28s
+  manage       resmgr-64696bf65b-z6r9m         0/1        Evicted         0        7m53s
+  manage       resmgr-64696bf65b-z98zg         0/1        Evicted         0        11m
+  manage       resmgr-64696bf65b-zcbkh         0/1        Evicted         0        14m
+  manage       resmgr-64696bf65b-zdblq         0/1        Evicted         0        22m
+  manage       resmgr-64696bf65b-zdf5g         0/1        Evicted         0        13m
+  manage       resmgr-64696bf65b-zfl9b         0/1        Evicted         0        6m28s
+  manage       resmgr-64696bf65b-znwsl         0/1        Evicted         0        6m5s
+  manage       resmgr-64696bf65b-zr5sf         0/1        Evicted         0        12m
+  manage       resmgr-64696bf65b-zrfnd         0/1        Evicted         0        18m
+  manage       resmgr-64696bf65b-zs4bk         0/1        Evicted         0        10m
+  manage       resmgr-64696bf65b-zzd8n         0/1        Evicted         0        13m
+  manage       resmgr-64696bf65b-zznth         0/1        Evicted         0        14m
+  ```
+
+  密密麻麻的特别多重复的，估计就是等的越久，他重试的pod越多。那么需要将其delete就可以（执行过程等了很久，估计有个几百条）
+
+  ```shell
+  kubectl get pods --all-namespaces | grep Evicted | awk '{print $1 " " $2}' | xargs -L1 kubectl delete pod -n
+  ```
+
+  
+
+
+
+
+
+
+
+### 部署脚本
 
 需要修改的部分
 

@@ -79,7 +79,7 @@ replication-factor用来设置主题的副本数。每个主题可以有多个�
 
 |                                                              | 确认这个配置是否是在borker里面创建多个对应的partition，还是有几台机子配数字几 |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/142a0a3fea0648ef9db60ce163894673.png) | <img src="/Users/zhengbufeng/Documents/学习笔记/kafka/4、Kafka集群与可靠性.assets/image-20241022125245317.png" alt="image-20241022125245317" style="zoom:50%;" /> |
+| ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/142a0a3fea0648ef9db60ce163894673.png) | <img src="/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/kafka/4、Kafka集群与可靠性.assets/image-20241022125245317.png" alt="image-20241022125245317" style="zoom:50%;" /> |
 
 
 

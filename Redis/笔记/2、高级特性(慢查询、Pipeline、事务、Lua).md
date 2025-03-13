@@ -1,4 +1,4 @@
-# Redis高级特性和应用(慢查询、Pipeline、事务、Lua)
+# 高级特性(慢查询、Pipeline、事务、Lua)
 
 ## Redis的慢查询
 
@@ -6,77 +6,93 @@
 
 Redis客户端执行一条命令分为如下4个部分:
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/06f5790387cc4fd792bcc06469c1c88e.png)
+<img src="https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/06f5790387cc4fd792bcc06469c1c88e.png" alt="image.png" style="zoom: 67%;" />
 
-1、发送命令
+需要注意，慢查询只统计步骤3的时间，所以没有慢查询并不代表客户端没有超时问题。其他原因有：
 
-2、命令排队
+- 对应的命令传输的网络问题，如步骤1，4
+- 对应的命令正在排队中，如步骤2
 
-3、命令执行
-
-4、返回结果
-
-需要注意，慢查询只统计步骤3的时间，所以没有慢查询并不代表客户端没有超时问题。因为有可能是命令的网络问题或者是命令在Redis在排队，所以不是说命令执行很慢就说是慢查询，而有可能是网络的问题或者是Redis服务非常繁忙（队列等待长）。
+所以并不是命令执行很慢就说是慢查询，而有可能是网络的问题或者是Redis服务非常繁忙（队列等待长）。
 
 ### 慢查询配置
 
-对于任何慢查询功能,需要明确两件事：多慢算慢，也就是预设阀值怎么设置？慢查询记录存放在哪？
+对于任何慢查询功能，需要明确两件事：
+
+- 多慢算慢，也就是预设阀值怎么设置？
+- 慢查询记录存放在哪？
 
 Redis提供了两种方式进行慢查询的配置
 
 **1、动态设置**
 
-慢查询的阈值默认值是10毫秒
+>  慢查询的阈值默认值是10毫秒
 
-参数：slowlog-log-slower-than就是时间预设阀值，它的单位是微秒(1秒=1000毫秒=1 000 000微秒)，默认值是10 000，假如执行了一条“很慢”的命令（例如keys *)，如果它的执行时间超过了10 000微秒，也就是10毫秒，那么它将被记录在慢查询日志中。
+参数：`slowlog-log-slower-than`就是时间预设阀值，它的单位是微秒(1秒=1000毫秒=1 000 000微秒)，默认值是10000
 
-我们通过动态命令修改
+假如执行了一条“很慢”的命令（例如keys *)，如果它的执行时间超过了这个值，那么它将被记录在慢查询日志中。
 
-```
-config set slowlog-log-slower-than 20000  
-```
-
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/f39ed7fee0d0445395ccad845c49f9ec.png)
-
-使用config set完后,若想将配置持久化保存到Redis.conf，要执行config rewrite
-
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/5920646bf3644603b6b39634abc85599.png)
-
-```
-config rewrite
+```shell
+# 动态命令修改
+127.0.0.1> config set slowlog-log-slower-than 20000  	# 那就是20ms
+OK
+# 使用config set完后,若想将配置持久化保存到Redis.conf，要执行config rewrite
+127.0.0.1> config rewrite 								
+OK
 ```
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/265eaf4d898445ac954eeb773a34741f.png)
+**注意：**如果配置
 
-**注意：**
+- slowlog-log-slower-than = 0 表示会记录所有的命令，
+- slowlog-log-slower-than < 0 对于任何命令都不会进行记录。
 
-如果配置slowlog-log-slower-than=0表示会记录所有的命令，slowlog-log-slower-than&#x3c;0对于任何命令都不会进行记录。
+中间有个小问题：
+
+```shell
+127.0.0.1:6379> config set slowlog-log-slower-than 20000
+(error) NOAUTH Authentication required.
+# 原因是：说明 Redis 服务器启用了密码认证，但当前连接未通过身份验证。
+127.0.0.1:6379> AUTH 112233
+OK
+127.0.0.1> config set slowlog-log-slower-than 20000
+OK
+```
+
+
 
 **2、配置文件设置（修改后需重启服务才生效）**
 
-打开Redis的配置文件redis.conf，就可以看到以下配置：
+打开Redis的配置文件/etc/redis.conf，就可以看到以下配置：
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/313284bef6564695ab3471fb60e52bd6.png)
+```shell
+# The following time is expressed in microseconds, so 1000000 is equivalent
+# to one second. Note that a negative number disables the slow log, while
+# a value of zero forces the logging of every command.
+slowlog-log-slower-than 10000
 
-slowlog-max-len用来设置慢查询日志最多存储多少条
+# There is no limit to this length. Just be aware that it will consume memory.
+# You can reclaim memory used by the slow log with SLOWLOG RESET.
+# 用来设置慢查询日志最多存储多少条
+slowlog-max-len 128
+```
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/64425e34a56d4c908787fa4d7c7fbdb5.png)
+slowlog-max-len配置来解决存储空间的问题。
 
-另外Redis还提供了slowlog-max-len配置来解决存储空间的问题。
-
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/7f1d45305a3740cbae2f1a13a1b2170c.png)
-
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/04697937eb7645db9c61c5c97f1d1c91.png)
+```shell
+127.0.0.1:6379> config get slowlog-max-len
+1) "slowlog-max-len"
+2) "128"
+```
 
 实际上Redis服务器将所有的慢查询日志保存在服务器状态的slowlog链表中（内存列表），slowlog-max-len就是列表的最大长度（默认128条）。当慢查询日志列表被填满后，新的慢查询命令则会继续入队，队列中的第一条数据机会出列。
 
-虽然慢查询日志是存放在Redis内存列表中的，但是Redis并没有告诉我们这里列表是什么,而是通过一组命令来实现对慢查询日志的访问和管理。并没有说明存放在哪。这个怎么办呢？Redis提供了一些列的慢查询操作命令让我们可以方便的操作。
+虽然慢查询日志是存放在Redis内存列表中的，但是Redis**并没有告诉我们这里列表是什么**，而是通过一组命令来实现对慢查询日志的访问和管理。**并没有说明存放在哪**。这个怎么办呢？Redis提供了一些列的慢查询操作命令让我们可以方便的操作。
 
 ### 慢查询操作命令
 
 **获取慢查询日志**
 
-```
+```shell
 slowlog get [n] 
 ```
 
@@ -86,64 +102,58 @@ slowlog get [n]
 
 可以看到每个慢查询日志有6个属性组成，分别是慢查询日志的标识id、发生时间戳、命令耗时（单位微秒）、执行命令和参数，客户端IP+端口和客户端名称。
 
-获取慢查询日志列表当前的长度
+另外命令：
 
+```shell
+# 获取慢查询日志列表当前的长度
+127.0.0.1:6379> slowlog len
+(integer) 12
+# 慢查询日志重置
+127.0.0.1:6379> slowlog reset
+OK
+127.0.0.1:6379> slowlog len
+(integer) 1
 ```
-slowlog len
-```
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/0047c133cccf46c88f30a17190956050.png)
 
-慢查询日志重置
-
-```
-slowlog reset
-```
-
-实际是对列表做清理操作
-
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/71b4851637d64eac9e0954f5df3192f9.png)
 
 #### 慢查询建议
 
-慢查询功能可以有效地帮助我们找到Redis可能存在的瓶颈,但在实际使用过程中要注意以下几点:
+慢查询功能可以有效地帮助我们找到Redis可能存在的**瓶颈**，但在实际使用过程中要注意以下几点:
 
 **slowlog-max-len配置建议:**
 
-建议调大慢查询列表，记录慢查询时Redis会对长命令做截断操作，并不会占用大量内存。增大慢查询列表可以减缓慢查询被剔除的可能，线上生产建议设置为1000以上。
+- 建议调大慢查询列表，记录慢查询时Redis会对长命令做`截断操作`，并不会占用大量内存。增大慢查询列表可以减缓慢查询被剔除的可能，线上生产建议设置为1000以上。
 
 **slowlog-log-slower-than配置建议:**
-配置建议：默认值超过10毫秒判定为慢查询，需要根据Redis并发量调整该值。
 
-由于Redis采用单线程响应命令，对于高流量的场景,如果命令执行时间在1毫秒以上，那么Redis最多可支撑OPS不到1000。因此对于高OPS场景的Redis建议设置为1毫秒或者更低比如100微秒。
+- 需要根据Redis并发量调整该值。
 
-慢查询只记录命令执行时间，并不包括命令排队和网络传输时间。因此客户端执行命令的时间会大于命令实际执行时间。因为命令执行排队机制,慢查询会导致其他命令级联阻塞，因此当客户端出现请求超时,需要检查该时间点是否有对应的慢查询，从而分析出是否为慢查询导致的命令级联阻塞。
+  由于Redis采用单线程响应命令，对于高流量的场景，如果命令执行时间在1毫秒以上，那么Redis最多可支撑OPS不到1000。因此对于高OPS场景的Redis建议设置为 1毫秒 或者更低比如 100微秒。
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/ac54a157c47649d7a775098157bf6090.png)
+  慢查询只记录命令执行时间，并不包括命令排队和网络传输时间。因此客户端执行命令的时间会大于命令实际执行时间。因为命令执行排队机制，`慢查询会导致其他命令级联阻塞`，因此当客户端出现请求超时，需要检查该时间点是否有对应的慢查询，从而分析出是否为慢查询导致的命令级联阻塞。
+
+<img src="https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/ac54a157c47649d7a775098157bf6090.png" alt="image.png" style="zoom:67%;" />
 
 由于慢查询日志是一个先进先出的队列，也就是说如果慢查询比较多的情况下，可能会丢失部分慢查询命令，为了防止这种情况发生，可以定期执行slow get命令将慢查询日志持久化到其他存储中。
 
 ## Pipeline
 
-前面我们已经说过，Redis客户端执行一条命令分为如下4个部分:1）发送命令2）命令排队3）命令执行4）返回结果。
+<img src="https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/ed845d8ca34447bda4e007515cb023f9.png" alt="image.png" style="zoom:67%;" />
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/ed845d8ca34447bda4e007515cb023f9.png)
+步骤1和4花费的时间称为`RTT`(Round Trip Time,往返时间)，也就是数据在网络上传输的时间。
 
-其中1和4花费的时间称为Round Trip Time (RTT,往返时间)，也就是数据在网络上传输的时间。
-
-Redis提供了批量操作命令(例如mget、mset等)，有效地节约RTT。
-
-但大部分命令是不支持批量操作的，例如要执行n次 hgetall命令，并没有mhgetall命令存在，需要消耗n次RTT。
+Redis提供了批量操作命令(例如mget、mset等)，有效地节约RTT。但大部分命令是不支持批量操作的，例如要执行n次 hgetall命令，并没有mhgetall命令存在，需要消耗n次RTT。
 
 举例：Redis的客户端和服务端可能部署在不同的机器上。例如客户端在本地，Redis服务器在阿里云的广州，两地直线距离约为800公里，那么1次RTT时间=800 x2/ ( 300000×2/3 ) =8毫秒，(光在真空中传输速度为每秒30万公里,这里假设光纤为光速的2/3 )。而Redis命令真正执行的时间通常在微秒(1000微妙=1毫秒)级别，所以才会有Redis 性能瓶颈是网络这样的说法。
 
-Pipeline（流水线)机制能改善上面这类问题,它能将一组 Redis命令进行组装,通过一次RTT传输给Redis,再将这组Redis命令的执行结果按顺序返回给客户端,没有使用Pipeline执行了n条命令,整个过程需要n次RTT。
+Pipeline（流水线)机制能改善上面这类问题，它**能将一组 Redis命令进行组装**，通过一次RTT传输给Redis，再将这组Redis命令的执行结果按顺序返回给客户端，没有使用Pipeline执行了n条命令，整个过程需要n次RTT。
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/bad98ee5e9824f669c21b5fc8f4bc67b.png)
+<img src="https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/bad98ee5e9824f669c21b5fc8f4bc67b.png" alt="image.png" style="zoom:67%;" />
 
 使用Pipeline 执行了n次命令，整个过程需要1次RTT。
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/87e1613317f64af9a6cfd4cbbd42e0a5.png)
+<img src="https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/87e1613317f64af9a6cfd4cbbd42e0a5.png" alt="image.png" style="zoom:67%;" />
 
 Pipeline并不是什么新的技术或机制，很多技术上都使用过。而且RTT在不同网络环境下会有不同，例如同机房和同机器会比较快，跨机房跨地区会比较慢。
 
@@ -151,55 +161,74 @@ redis-cli的--pipe选项实际上就是使用Pipeline机制，但绝对部分情
 
 代码参见：
 
-```
-com.msb.redis.adv.RedisPipeline
-```
-
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/ff23cbb3f5b946f196ce7fd03feb1f5b.png)
-
-总的来说，在不同网络环境下非Pipeline和Pipeline执行10000次set操作的效果，在执行时间上的比对如下：
-
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/7537b379814845ad80484b1eaf4346e2.png)
+|               com.msb.redis.adv.RedisPipeline                |
+| :----------------------------------------------------------: |
+| ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/ff23cbb3f5b946f196ce7fd03feb1f5b.png) |
+| 总的来说，在不同网络环境下非Pipeline和Pipeline执行10000次set操作的效果，在执行时间上的比对如下： |
+| <img src="https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/7537b379814845ad80484b1eaf4346e2.png" alt="image.png" style="zoom:67%;" /> |
 
 差距有100多倍，可以得到如下两个结论:
 
-1、Pipeline执行速度一般比逐条执行要快。
+1. Pipeline执行速度一般比逐条执行要快。
 
-2、客户端和服务端的网络延时越大，Pipeline的效果越明显。
+2. 客户端和服务端的网络延时越大，Pipeline的效果越明显。
 
-Pipeline虽然好用,但是每次Pipeline组装的命令个数不能没有节制，否则一次组装Pipeline数据量过大，一方面会增加客户端的等待时间，另一方面会造成一定的网络阻塞,可以将一次包含大量命令的Pipeline拆分成多次较小的Pipeline来完成，比如可以将Pipeline的总发送大小控制在内核输入输出缓冲区大小之内或者控制在单个TCP 报文最大值1460字节之内。
 
-内核的输入输出缓冲区大小一般是4K-8K，不同操作系统会不同（当然也可以配置修改）
 
-最大传输单元（Maximum Transmission Unit，MTU）,这个在以太网中最大值是1500字节。那为什么单个TCP 报文最大值是1460，因为因为还要扣减20个字节的IP头和20个字节的TCP头，所以是1460。
+需要注意的是：
+
+Pipeline虽然好用，但是每次Pipeline组装的数据量不能过大，一方面会增加客户端的等待时间，另一方面会造成一定的网络阻塞（会拆包），可以将一次包含大量命令的Pipeline拆分成多次较小的Pipeline来完成
+
+比如可以将Pipeline的总发送大小控制在 `内核输入输出缓冲区大小之内` 或者是 `单个TCP报文最大值1460字节之内`。
+
+- 内核的输入输出缓冲区大小一般是 4K-8K，不同操作系统会不同（当然也可以配置修改）
+
+- 最大传输单元`MTU`（Maximum Transmission Unit），这个在以太网中最大值是1500字节。
+
+  为什么单个TCP报文最大值是1460？因为因为还要扣减 20字节的IP头 和 20字节的TCP头，所以是1460。
 
 同时Pipeline只能操作一个Redis实例，但是即使在分布式Redis场景中，也可以作为批量操作的重要优化手段。
 
+
+
 ## 事务
 
-大家应该对事务比较了解，简单地说，事务表示一组动作，要么全部执行，要么全部不执行。
+redis的事物比较弱，只校验语法问题。
 
 例如在社交网站上用户A关注了用户B，那么需要在用户A的关注表中加入用户B，并且在用户B的粉丝表中添加用户A，这两个行为要么全部执行，要么全部不执行,否则会出现数据不一致的情况。
 
-Redis提供了简单的事务功能，将一组需要一起执行的命令放到multi和exec两个命令之间。multi 命令代表事务开始，exec命令代表事务结束。另外discard命令是回滚。
+Redis提供了简单的事务功能，将一组需要一起执行的命令放到`multi`和`exec`两个命令之间。multi 命令代表事务开始，exec命令代表事务结束。另外discard命令是回滚。
 
-一个客户端
+示例：
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/97fd31a4f6174421a5d84029172adeb0.png)
+- 一个客户端
 
-另外一个客户端
+  ```shell
+  127.0.0.1:6379> multi
+  OK
+  127.0.0.1:6379(TX)> sadd A-follow B
+  QUEUED
+  127.0.0.1:6379(TX)> sadd B-fans A
+  QUEUED
+  127.0.0.1:6379(TX)> exec
+  1) (integer) 1
+  2) (integer) 1
+  ```
 
-在事务没有提交的时查询（查不到数据）
+  可以看到sadd命令此时的返回结果是QUEUED，代表命令并没有真正执行，而是暂时保存在Redis中的一个`缓存队列`（所以discard也只是丢弃这个缓存队列中的未执行命令，并不会回滚已经操作过的数据，这一点要和关系型数据库的Rollback操作区分开）。
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/c10554292d0f484f9844542243507dda.png)
+- 另外一个客户端
 
-在事务提交后查询（可以查到数据）
+  ```shell
+  # 事务提交前查询（查不到数据）
+  127.0.0.1:6379> SISMEMBER A-follow B
+  (integer) 0
+  # 事务提交后查询
+  127.0.0.1:6379> SISMEMBER A-follow B
+  (integer) 1
+  ```
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1663569981087/96d61976166148d5a82501d41ab4003e.png)
-
-可以看到sadd命令此时的返回结果是QUEUED，代表命令并没有真正执行，而是暂时保存在Redis中的一个缓存队列（所以discard也只是丢弃这个缓存队列中的未执行命令，并不会回滚已经操作过的数据，这一点要和关系型数据库的Rollback操作区分开）。
-
-只有当exec执行后，用户A关注用户B的行为才算完成，如下所示exec返回的两个结果对应sadd命令。
+  
 
 **但是要注意Redis的事务功能很弱。在事务回滚机制上，Redis只能对基本的语法错误进行判断。**
 
@@ -221,7 +250,7 @@ Redis提供了简单的事务功能，将一组需要一起执行的命令放到
 
 ### **Redis的事务原理**
 
-事务是Redis实现在服务器端的行为，用户执行MULTI命令时，服务器会将对应这个用户的客户端对象设置为一个特殊的状态，在这个状态下后续用户执行的查询命令不会被真的执行，而是被服务器缓存起来，直到用户执行EXEC命令为止，服务器会将这个用户对应的客户端对象中缓存的命令按照提交的顺序依次执行。
+事务是Redis实现在服务器端的行为，用户执行 MULTI 命令时，服务器会将对应这个用户的客户端对象设置为一个特殊的状态，在这个状态下后续用户执行的查询命令不会被真的执行，而是被服务器缓存起来，直到用户执行EXEC命令为止，服务器会将这个用户对应的客户端对象中缓存的命令按照提交的顺序依次执行。
 
 ### Redis的watch命令
 
