@@ -167,16 +167,7 @@ RabbitMQ提供了很多中通讯方式，依然可以去官方查看：https://r
 - 构建工具类：
 
   ```java
-  package com.mashibing.util;
-  
-  import com.rabbitmq.client.Connection;
-  import com.rabbitmq.client.ConnectionFactory;
-  
-  import java.io.IOException;
-  import java.util.concurrent.TimeoutException;
-  
   public class RabbitMQConnectionUtil {
-  
       public static final String RABBITMQ_HOST = "192.168.11.32";
       public static final int RABBITMQ_PORT = 5672;
       public static final String RABBITMQ_USERNAME = "guest";
@@ -201,7 +192,6 @@ RabbitMQ提供了很多中通讯方式，依然可以去官方查看：https://r
           Connection connection = factory.newConnection();
           return connection;
       }
-  
   }
   ```
 
@@ -214,15 +204,7 @@ RabbitMQ提供了很多中通讯方式，依然可以去官方查看：https://r
 生产者：
 
 ```java
-package com.mashibing.helloworld;
-
-import com.mashibing.util.RabbitMQConnectionUtil;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import org.junit.Test;
-
 public class Publisher {
-
     public static final String QUEUE_NAME = "hello";
 
     @Test
@@ -291,24 +273,15 @@ public class Consumer {
 - 消费者：**让消费者关闭自动ack，并且设置消息的流控，最终实现消费者可以尽可能去多消费消息**
 
   ```java
-  import com.mashibing.util.RabbitMQConnectionUtil;
-  import com.rabbitmq.client.*;
-  import org.junit.Test;
-  
-  import java.io.IOException;
-  
   public class Consumer {
       @Test
       public void consume1() throws Exception {
           //1. 获取连接对象
           Connection connection = RabbitMQConnectionUtil.getConnection();
-  
           //2. 构建Channel
           Channel channel = connection.createChannel();
-  
           //3. 构建队列
           channel.queueDeclare(Publisher.QUEUE_NAME,false,false,false,null);
-  
           //3.5 设置消息的流控
           channel.basicQos(3);
   
@@ -335,13 +308,10 @@ public class Consumer {
       public void consume2() throws Exception {
           //1. 获取连接对象
           Connection connection = RabbitMQConnectionUtil.getConnection();
-  
           //2. 构建Channel
           Channel channel = connection.createChannel();
-  
           //3. 构建队列
           channel.queueDeclare(Publisher.QUEUE_NAME,false,false,false,null);
-  
           channel.basicQos(3);
   
           //4. 监听消息
@@ -374,14 +344,6 @@ public class Consumer {
 生产者：自行构建Exchange并绑定指定队列[（FANOUT类型）]()
 
 ```java
-package com.mashibing.pubsub;
-
-import com.mashibing.util.RabbitMQConnectionUtil;
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import org.junit.Test;
-
 public class Publisher {
     public static final String EXCHANGE_NAME = "pubsub";
     public static final String QUEUE_NAME1 = "pubsub-one";
@@ -390,21 +352,16 @@ public class Publisher {
     public void publish() throws Exception {
         //1. 获取连接对象
         Connection connection = RabbitMQConnectionUtil.getConnection();
-
         //2. 构建Channel
         Channel channel = connection.createChannel();
-
         //3. 构建交换机
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
-
         //4. 构建队列
         channel.queueDeclare(QUEUE_NAME1,false,false,false,null);
         channel.queueDeclare(QUEUE_NAME2,false,false,false,null);
-
         //5. 绑定交换机和队列，使用的是FANOUT类型的交换机，绑定方式是直接绑定
         channel.queueBind(QUEUE_NAME1,EXCHANGE_NAME,"");
         channel.queueBind(QUEUE_NAME2,EXCHANGE_NAME,"");
-
         //6. 发消息到交换机
         channel.basicPublish(EXCHANGE_NAME,"45jk6h645jk",null,"publish/subscribe!".getBytes());
         System.out.println("消息成功发送！");
@@ -423,12 +380,6 @@ public class Publisher {
 生产者：在绑定Exchange和Queue时，需要指定好routingKey，同时在发送消息时，也指定routingKey，只有routingKey一致时，才会把指定的消息路由到指定的Queue
 
 ```java
-import com.mashibing.util.RabbitMQConnectionUtil;
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import org.junit.Test;
-
 public class Publisher {
     public static final String EXCHANGE_NAME = "routing";
     public static final String QUEUE_NAME1 = "routing-one";
@@ -437,22 +388,17 @@ public class Publisher {
     public void publish() throws Exception {
         //1. 获取连接对象
         Connection connection = RabbitMQConnectionUtil.getConnection();
-
         //2. 构建Channel
         Channel channel = connection.createChannel();
-
         //3. 构建交换机
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-
         //4. 构建队列
         channel.queueDeclare(QUEUE_NAME1,false,false,false,null);
         channel.queueDeclare(QUEUE_NAME2,false,false,false,null);
-
         //5. 绑定交换机和队列
         channel.queueBind(QUEUE_NAME1,EXCHANGE_NAME,"ORANGE");
         channel.queueBind(QUEUE_NAME2,EXCHANGE_NAME,"BLACK");
         channel.queueBind(QUEUE_NAME2,EXCHANGE_NAME,"GREEN");
-
         //6. 发消息到交换机
         channel.basicPublish(EXCHANGE_NAME,"ORANGE",null,"大橙子！".getBytes());
         channel.basicPublish(EXCHANGE_NAME,"BLACK",null,"黑布林大狸子".getBytes());
@@ -473,12 +419,6 @@ public class Publisher {
 生产者：TOPIC类型可以编写带有特殊意义的routingKey的绑定方式
 
 ```java
-import com.mashibing.util.RabbitMQConnectionUtil;
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import org.junit.Test;
-
 public class Publisher {
     public static final String EXCHANGE_NAME = "topic";
     public static final String QUEUE_NAME1 = "topic-one";
@@ -487,13 +427,10 @@ public class Publisher {
     public void publish() throws Exception {
         //1. 获取连接对象
         Connection connection = RabbitMQConnectionUtil.getConnection();
-
         //2. 构建Channel
         Channel channel = connection.createChannel();
-
         //3. 构建交换机
         channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
-
         //4. 构建队列
         channel.queueDeclare(QUEUE_NAME1,false,false,false,null);
         channel.queueDeclare(QUEUE_NAME2,false,false,false,null);
@@ -678,10 +615,6 @@ public class Consumer {
 - 声明交换机&队列
 
   ```java
-  import org.springframework.amqp.core.*;
-  import org.springframework.context.annotation.Bean;
-  import org.springframework.context.annotation.Configuration;
-  
   @Configuration
   public class RabbitMQConfig {
       public static final String EXCHANGE = "boot-exchange";
@@ -710,17 +643,6 @@ public class Consumer {
 #### 5.2 生产者操作
 
   ```java
-package com.mashibing.rabbitmqboot;
-
-import com.mashibing.rabbitmqboot.config.RabbitMQConfig;
-import org.junit.jupiter.api.Test;
-import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessagePostProcessor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-
 @SpringBootTest
 public class PublisherTest {
     @Autowired
@@ -749,19 +671,6 @@ public class PublisherTest {
 #### 5.3 消费者操作
 
 ```java
-package com.mashibing.rabbitmqboot;
-
-import com.mashibing.rabbitmqboot.config.RabbitMQConfig;
-import com.rabbitmq.client.Channel;
-import org.junit.jupiter.api.Test;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-
 @Component
 public class ConsumeListener {
     @RabbitListener(queues = RabbitMQConfig.QUEUE)
@@ -774,7 +683,7 @@ public class ConsumeListener {
 }
 ```
 
-> 以上注解可以监听多个队列， 以下配置要先手动开启ack，然后才能方法参数才有channel 和 message
+> 以上注解可以监听多个队列  ？？？， 以下配置要先手动开启ack，然后才能方法参数才有channel 和 message
 
 ```yaml
 spring:

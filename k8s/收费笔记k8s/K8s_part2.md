@@ -899,7 +899,7 @@ init 容器与普通的容器非常像，除了如下几点：
 
 - 它们总是运行到完成。如果 Pod 的 Init 容器失败，kubelet 会不断地重启该 Init 容器直到该容器成功为止。 然而，如果 Pod 对应的 `restartPolicy` 值为 "Never"，并且 Pod 的 Init 容器失败， 则 Kubernetes 会将整个 Pod 状态设置为失败。
 - 每个都==必须==在下一个启动之前成功完成。
-- 同时 Init 容器不支持 `lifecycle`、`livenessProbe`、`readinessProbe` 和 `startupProbe`， 因为它们**必须在 Pod 就绪之前运行完成**。
+- 同时 Init 容器不支持 `lifecycle`和 3个探针， 因为它们**必须在 Pod 就绪之前运行完成**。
 - 如果为一个 Pod 指定了多个 Init 容器，这些容器会按顺序逐个运行。 每个 Init 容器必须运行成功，下一个才能够运行。当所有的 Init 容器运行完成时， Kubernetes 才会为 Pod 初始化应用容器并像平常一样运行。
 - Init 容器支持应用容器的全部字段和特性，包括资源限制、数据卷和安全设置。 然而，Init 容器对资源请求和限制的处理稍有不同。
 
@@ -982,7 +982,7 @@ Events:
 - 选择一个节点，给它添加一个标签：
 
   ```shell
-  kubectl label nodes k8s-node1(节点名称) disktype=ssd
+  $ kubectl label nodes k8s-node1(节点名称) disktype=ssd
   ```
 
 - 验证你所选节点具有 `disktype=ssd` 标签：
@@ -1048,7 +1048,7 @@ spec:
 
 
 
-节点亲和性概念上类似于 `nodeSelector`， 它使你可以根据节点上的标签来约束 Pod 可以调度到哪些节点上。 节点亲和性有两种：
+节点亲和性概念上类似于 `nodeSelector`，它使你可以根据节点上的标签来约束 Pod 可以调度到哪些节点上。 节点亲和性有两种：
 
 - `requiredDuringSchedulingIgnoredDuringExecution`： 调度器只有在规则被满足的时候才能执行调度。此功能类似于 `nodeSelector`， 但其语法表达能力更强。
 - `preferredDuringSchedulingIgnoredDuringExecution`： 调度器会尝试寻找满足对应规则的节点。如果找不到匹配的节点，调度器仍然会调度该 Pod。

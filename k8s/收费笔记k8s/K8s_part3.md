@@ -617,7 +617,7 @@ spec:
 
 ### 5 多端口
 
-```yml
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -651,10 +651,10 @@ spec:
   selector:
     app: nginx
   ports:
-    - port: 8080 #service 端口
+    - port: 8080 		# service 端口
       name: write
-      targetPort: 80 #容器端口
-      nodePort: 31001 #node 节点端口 固定在 30000-32767 之间
+      targetPort: 80 	# 容器端口
+      nodePort: 31001 	# node 节点端口 固定在 30000-32767 之间
     - port: 8081
       name: read
       targetPort: 80
@@ -881,7 +881,7 @@ spec:
     command: ["/bin/sh", "-c", "echo 'hello' > /data/data.txt && sleep 3600"]
     volumeMounts:
     - name: data
-      mountPath: /data   # pod 内的路径
+      mountPath: /data     # pod 内的路径
   volumes:
   - name: data
     hostPath:
@@ -1595,8 +1595,8 @@ Ingress 简单示例：
 
 Ingress 和 Service都是 Kubernetes 中用于将流量路由到应用程序的机制，但它们在路由层面上有所不同：
 
-- Service 是 Kubernetes 中抽象的应用程序服务，它公开了一个单一的IP地址和端口，可以用于在 Kubernetes 集群内部的 Pod 之间进行流量路由。
-- Ingress 是一个 Kubernetes 资源对象，它提供了对集群外部流量路由的规则。Ingress 通过一个公共IP地址和端口将流量路由到一个或多个Service。
+- Service 是 Kubernetes 中**抽象的应用程序服务**，它**公开了一个单一的IP地址和端口**，可以用于在 Kubernetes 集群**内部**的 Pod 之间进行流量路由。
+- Ingress 是一个 Kubernetes **资源对象**，它提供了**对集群外部流量路由的规则**。Ingress 通过一个公共IP地址和端口将流量路由到一个或多个Service。
 
 ### 3 Ingress Controller
 

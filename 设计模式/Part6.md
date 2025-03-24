@@ -4,21 +4,7 @@
 
 行为型模式分为类行为模式和对象行为模式，前者采用继承机制来在类间分派行为，后者采用组合或聚合在对象间分配行为。由于组合关系或聚合关系比继承关系耦合度低，满足“合成复用原则”，所以对象行为模式比类行为模式具有更大的灵活性。
 
-行为型模式分为：
-
-* 观察者模式
-* 模板方法模式
-* 策略模式
-* 职责链模式
-* 状态模式
-* 命令模式
-* 中介者模式
-* 迭代器模式
-* 访问者模式
-* 备忘录模式
-* 解释器模式
-
-以上 11 种行为型模式，除了模板方法模式和解释器模式是类行为型模式，其他的全部属于对象行为型模式。
+除了模板方法模式和解释器模式是类行为型模式，其他的全部属于对象行为型模式。
 
 ## 6.1 观察者模式
 
@@ -64,22 +50,16 @@
 ```java
 /**
  * 抽象观察者
- * @author spikeCong
- * @date 2022/10/11
  **/
 public interface Observer {
-
     //update方法: 为不同观察者的更新(响应)行为定义相同的接口,不同的观察者对该方法有不同的实现
     public void update();
 }
 
 /**
  * 具体观察者
- * @author spikeCong
- * @date 2022/10/11
  **/
 public class ConcreteObserverOne implements Observer {
-
     @Override
     public void update() {
         //获取消息通知,执行业务代码
@@ -89,11 +69,8 @@ public class ConcreteObserverOne implements Observer {
 
 /**
  * 具体观察者
- * @author spikeCong
- * @date 2022/10/11
  **/
 public class ConcreteObserverTwo implements Observer {
-
     @Override
     public void update() {
         //获取消息通知,执行业务代码
@@ -107,11 +84,8 @@ public class ConcreteObserverTwo implements Observer {
 ```java
 /**
  * 抽象目标类
- * @author spikeCong
- * @date 2022/10/11
  **/
 public interface Subject {
-
      void attach(Observer observer);
      void detach(Observer observer);
      void notifyObservers();
@@ -119,14 +93,10 @@ public interface Subject {
 
 /**
  * 具体目标类
- * @author spikeCong
- * @date 2022/10/11
  **/
 public class ConcreteSubject implements Subject {
-
     //定义集合,存储所有观察者对象
     private ArrayList<Observer> observers = new ArrayList<>();
-
 
     //注册方法,向观察者集合中增加一个观察者
     @Override
@@ -155,7 +125,6 @@ public class ConcreteSubject implements Subject {
 
 ```java
 public class Client {
-
     public static void main(String[] args) {
         //创建目标类(被观察者)
         ConcreteSubject subject = new ConcreteSubject();
@@ -179,11 +148,8 @@ public class Client {
 ```java
 /**
  * 模拟买房摇号服务
- * @author spikeCong
- * @date 2022/10/11
  **/
 public class DrawHouseService {
-
     //摇号抽签
     public String lots(String uId){
         if(uId.hashCode() % 2 == 0){
@@ -195,34 +161,25 @@ public class DrawHouseService {
 }
 
 public class LotteryResult {
-
     private String uId; // 用户id
     private String msg; // 摇号信息
     private Date dataTime; // 业务时间
-    
     
 	//get&set.....
 }
 
 /**
  * 开奖服务接口
- * @author spikeCong
- * @date 2022/10/11
  **/
 public interface LotteryService {
-
     //摇号相关业务
     public LotteryResult lottery(String uId);
 }
 
-
 /**
  * 开奖服务
- * @author spikeCong
- * @date 2022/10/11
  **/
 public class LotteryServiceImpl implements LotteryService {
-
     //注入摇号服务
     private DrawHouseService houseService = new DrawHouseService();
 
@@ -230,10 +187,8 @@ public class LotteryServiceImpl implements LotteryService {
     public LotteryResult lottery(String uId) {
         //摇号
         String result = houseService.lots(uId);
-
         //发短信
         System.out.println("发送短信通知用户ID为: " + uId + ",您的摇号结果如下: " + result);
-
         //发送MQ消息
         System.out.println("记录用户摇号结果(MQ), 用户ID:" +  uId + ",摇号结果:" + result);
 
@@ -244,7 +199,7 @@ public class LotteryServiceImpl implements LotteryService {
 @Test
 public void test1(){
     LotteryService ls = new LotteryServiceImpl();
-    String result  = ls.lottery("1234567887654322");
+    LotteryResult result = ls.lottery("1234567887654322");
     System.out.println(result);
 }
 ```
@@ -260,21 +215,15 @@ public void test1(){
 ```java
 /**
  * 事件监听接口
- * @author spikeCong
- * @date 2022/10/11
  **/
 public interface EventListener {
-
     void doEvent(LotteryResult result);
 }
 
 /**
  * 短信发送事件
- * @author spikeCong
- * @date 2022/10/11
  **/
 public class MessageEventListener implements EventListener {
-
     @Override
     public void doEvent(LotteryResult result) {
         System.out.println("发送短信通知用户ID为: " + result.getuId() +
@@ -284,11 +233,8 @@ public class MessageEventListener implements EventListener {
 
 /**
  * MQ消息发送事件
- * @author spikeCong
- * @date 2022/10/11
  **/
 public class MQEventListener implements EventListener {
-
     @Override
     public void doEvent(LotteryResult result) {
         System.out.println("记录用户摇号结果(MQ), 用户ID:" +  result.getuId() +
@@ -301,14 +247,12 @@ public class MQEventListener implements EventListener {
 
 ```java
 /**
- * 事件处理类
- * @author spikeCong
- * @date 2022/10/11
+ * 事件处理类  （被观察者）
  **/
 public class EventManager {
-
     public enum EventType{
-        MQ,Message
+        MQ, 
+        Message
     }
 
     //监听器集合
@@ -359,11 +303,8 @@ public class EventManager {
 ```java
 /**
  * 开奖服务接口
- * @author spikeCong
- * @date 2022/10/11
  **/
 public abstract class LotteryService{
-
     private EventManager eventManager;
 
     public LotteryService(){
@@ -388,11 +329,8 @@ public abstract class LotteryService{
 
 /**
  * 开奖服务
- * @author spikeCong
- * @date 2022/10/11
  **/
 public class LotteryServiceImpl extends LotteryService {
-
     //注入摇号服务
     private DrawHouseService houseService = new DrawHouseService();
 
@@ -400,7 +338,6 @@ public class LotteryServiceImpl extends LotteryService {
     public LotteryResult lottery(String uId) {
         //摇号
         String result = houseService.lots(uId);
-
         return new LotteryResult(uId,result,new Date());
     }
 }
@@ -414,6 +351,101 @@ public void test2(){
     LotteryService ls = new LotteryServiceImpl();
     LotteryResult result  = ls.lotteryAndMsg("1234567887654322");
     System.out.println(result);
+}
+```
+
+---
+
+另外一个好懂的例子：气象局
+
+```java
+// 观察者接口（所有观察者必须实现）
+public interface Observer {
+    void update(float temperature, float humidity);
+}
+
+// 被观察者接口（主题）
+public interface Subject {
+    void registerObserver(Observer o); // 注册观察者
+    void removeObserver(Observer o);   // 移除观察者
+    void notifyObservers();            // 通知观察者
+}
+```
+
+实现一个气象站
+
+```java
+public class WeatherData implements Subject {
+    private List<Observer> observers = new ArrayList<>();
+    private float temperature;
+    private float humidity;
+
+    // 注册观察者
+    @Override
+    public void registerObserver(Observer o) {
+        observers.add(o);
+    }
+
+    // 移除观察者
+    @Override
+    public void removeObserver(Observer o) {
+        observers.remove(o);
+    }
+
+    // 通知所有观察者
+    @Override
+    public void notifyObservers() {
+        for (Observer observer : observers) {
+            observer.update(temperature, humidity);
+        }
+    }
+
+    // 当气象数据更新时，触发通知
+    public void setMeasurements(float temperature, float humidity) {
+        this.temperature = temperature;
+        this.humidity = humidity;
+        notifyObservers(); // 关键点：数据变化后通知观察者
+    }
+}
+```
+
+实现具体观察者 （显示的仪器）
+
+```java
+// 温度显示器
+public class TemperatureDisplay implements Observer {
+    @Override
+    public void update(float temperature, float humidity) {
+        System.out.println("[温度显示] 当前温度：" + temperature + "℃");
+    }
+}
+
+// 湿度显示器
+public class HumidityDisplay implements Observer {
+    @Override
+    public void update(float temperature, float humidity) {
+        System.out.println("[湿度显示] 当前湿度：" + humidity + "%");
+    }
+}
+```
+
+测试
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        WeatherData weatherData = new WeatherData();
+
+        // 创建观察者并注册
+        Observer tempDisplay = new TemperatureDisplay();
+        Observer humidityDisplay = new HumidityDisplay();
+        weatherData.registerObserver(tempDisplay);
+        weatherData.registerObserver(humidityDisplay);
+
+        // 模拟气象数据变化
+        weatherData.setMeasurements(25.5f, 65);  // 触发通知
+        weatherData.setMeasurements(26.0f, 70);  // 再次触发通知
+    }
 }
 ```
 
@@ -466,9 +498,9 @@ JDK中提供了Observable类以及Observer接口,它们构成了JDK对观察者�
 
 **模板方法模式(template method pattern)原始定义是：在操作中定义算法的框架，将一些步骤推迟到子类中。模板方法让子类在不改变算法结构的情况下重新定义算法的某些步骤。**
 
-模板方法中的算法可以理解为广义上的业务逻辑,并不是特指某一个实际的算法.定义中所说的算法的框架就是模板, 包含算法框架的方法就是模板方法.
+模板方法中的算法可以理解为广义上的业务逻辑,并不是特指某一个实际的算法。`定义中所说的算法的框架就是模板，包含算法框架的方法就是模板方法。`
 
-> 例如: 我们去医院看病一般要经过以下4个流程：挂号、取号、排队、医生问诊等，其中挂号、 取号 、排队对每个病人是一样的，可以在父类中实现，但是具体医生如何根据病情开药每个人都是不一样的，所以开药这个操作可以延迟到子类中实现。
+> 例如: 我们去医院看病一般要经过以下4个流程：挂号、取号、排队、医生问诊等，其中挂号、取号、排队对每个病人是一样的，可以在父类中实现，但是具体医生如何根据病情开药每个人都是不一样的，所以**开药这个操作可以延迟到子类中实现**。
 
 ​														<img src=".\img\108.jpg" alt="image-20220530160637842" style="zoom: 70%;" />	
 
@@ -511,11 +543,8 @@ UML类图对应的代码实现
 ```java
 /**
  * 抽象父类
- * @author spikeCong
- * @date 2022/10/12
  **/
 public abstract class AbstractClassTemplate {
-
     void step1(String key){
         System.out.println("在模板类中 -> 执行步骤1");
         if(step2(key)){
@@ -523,7 +552,6 @@ public abstract class AbstractClassTemplate {
         }else{
             step4();
         }
-
         step5();
     }
 
@@ -549,8 +577,6 @@ public abstract class AbstractClassTemplate {
 }
 
 public class ConcreteClassA extends AbstractClassTemplate{
-
-
     @Override
     void step3() {
         System.out.println("在子类A中 -> 执行步骤 3");
@@ -563,7 +589,6 @@ public class ConcreteClassA extends AbstractClassTemplate{
 }
 
 public class ConcreteClassB extends AbstractClassTemplate {
-
     @Override
     void step3() {
         System.out.println("在子类B中 -> 执行步骤 3");
@@ -576,15 +601,14 @@ public class ConcreteClassB extends AbstractClassTemplate {
 }
 
 public class Test01 {
-
     public static void main(String[] args) {
         AbstractClassTemplate concreteClassA = new ConcreteClassA();
-        concreteClassA.run("");
+        concreteClassA.step1("");
 
         System.out.println("===========");
 
         AbstractClassTemplate concreteClassB = new ConcreteClassB();
-        concreteClassB.run("x");
+        concreteClassB.step1("x");
     }
 }
 
@@ -611,11 +635,8 @@ P2P公司的借款系统中有一个利息计算模块,利息的计算流程是�
 ```java
 /**
  * 账户抽象类
- * @author spikeCong
- * @date 2022/10/12
  **/
 public abstract class Account {
-
     //step1 具体方法-验证用户信息是否正确
     public boolean validate(String account,String password){
         System.out.println("账号: " + account + ",密码: " + password);
@@ -646,14 +667,10 @@ public abstract class Account {
     }
 }
 
-
 /**
  * 借款一个月
- * @author spikeCong
- * @date 2022/10/12
  **/
 public class LoanOneMonth extends Account{
-
     @Override
     public void calculate() {
         System.out.println("借款周期30天,利率为10%!");
@@ -662,11 +679,8 @@ public class LoanOneMonth extends Account{
 
 /**
  * 借款七天
- * @author spikeCong
- * @date 2022/10/12
  **/
 public class LoanSevenDays extends Account{
-
     @Override
     public void calculate() {
         System.out.println("借款周期7天,无利息!仅收取贷款金额1%的服务费!");
@@ -679,11 +693,8 @@ public class LoanSevenDays extends Account{
 
 }
 
-
 public class Client {
-
     public static void main(String[] args) {
-
         Account a1 = new LoanSevenDays();
         a1.handle("tom","12345");
 
@@ -694,8 +705,6 @@ public class Client {
     }
 }
 ```
-
-
 
 ### 6.2.5 模板方法模式总结
 
@@ -717,7 +726,7 @@ public class Client {
 **模板方法模式的使用场景一般有：**
 
 - 多个类有相同的方法并且逻辑可以共用时；
-- 将通用的算法或固定流程设计为模板，在每一个具体的子类中再继续优化算法步骤或流程步骤时；
+- `将通用的算法或固定流程设计为模板`，在每一个具体的子类中再继续优化算法步骤或流程步骤时；
 - 重构超长代码时，发现某一个经常使用的公有方法。
 
 
@@ -759,16 +768,12 @@ public class Client {
 ```java
 /**
  * 抽象策略类
- * @author spikeCong
- * @date 2022/10/13
  **/
 public interface Strategy {
-
     void algorithm();
 }
 
 public class ConcreteStrategyA implements Strategy {
-
     @Override
     public void algorithm() {
         System.out.println("执行策略A");
@@ -776,7 +781,6 @@ public class ConcreteStrategyA implements Strategy {
 }
 
 public class ConcreteStrategyB implements Strategy {
-
     @Override
     public void algorithm() {
         System.out.println("执行策略B");
@@ -785,11 +789,8 @@ public class ConcreteStrategyB implements Strategy {
 
 /**
  * 环境类
- * @author spikeCong
- * @date 2022/10/13
  **/
 public class Context {
-
     //维持一个对抽象策略类的引用
     private Strategy strategy;
 
@@ -804,10 +805,7 @@ public class Context {
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
-
         Strategy strategyA  = new ConcreteStrategyA();
         Context context = new Context(strategyA); //可以在运行时指定类型,通过配置文件+反射机制实现
         context.algorithm();
@@ -830,13 +828,9 @@ public class Client {
 ```java
 /**
  * 回执信息
- * @author spikeCong
- * @date 2022/10/13
  **/
 public class Receipt {
-
     private String message; //回执信息
-
     private String type; //回执类型(MT1101、MT2101、MT4101、MT8104)
 
     public Receipt() {
@@ -869,7 +863,6 @@ public class Receipt {
 
 ```java
 public class ReceiptBuilder {
-
     public static List<Receipt> genReceiptList(){
         //模拟回执信息
         List<Receipt> receiptList = new ArrayList<>();
@@ -881,7 +874,6 @@ public class ReceiptBuilder {
         //......
         return receiptList;
     }
-
 }
 ```
 
@@ -889,9 +881,7 @@ public class ReceiptBuilder {
 
 ```java
 public class Client {
-
     public static void main(String[] args) {
-
         List<Receipt> receiptList = ReceiptBuilder.genReceiptList();
 
         //循环判断
@@ -913,7 +903,6 @@ public class Client {
                 System.out.println("解析回执内容");
                 System.out.println("执行业务逻辑D");
             }
-
             //......
         }
     }
@@ -929,11 +918,8 @@ public class Client {
 ```java
 /**
  * 回执处理策略接口
- * @author spikeCong
- * @date 2022/10/13
  **/
 public interface ReceiptHandleStrategy {
-
     void handleReceipt(Receipt receipt);
 }
 
@@ -943,7 +929,6 @@ public interface ReceiptHandleStrategy {
 
 ```java
 public class Mt1011ReceiptHandleStrategy implements ReceiptHandleStrategy {
-
     @Override
     public void handleReceipt(Receipt receipt) {
         System.out.println("解析报文MT1011: " + receipt.getMessage());
@@ -951,13 +936,11 @@ public class Mt1011ReceiptHandleStrategy implements ReceiptHandleStrategy {
 }
 
 public class Mt2101ReceiptHandleStrategy implements ReceiptHandleStrategy {
-
     @Override
     public void handleReceipt(Receipt receipt) {
         System.out.println("解析报文MT2101: " + receipt.getMessage());
     }
 }
-
 ......
 ```
 
@@ -966,11 +949,8 @@ public class Mt2101ReceiptHandleStrategy implements ReceiptHandleStrategy {
 ```java
 /**
  * 上下文类,持有策略接口
- * @author spikeCong
- * @date 2022/10/13
  **/
 public class ReceiptStrategyContext {
-
     private ReceiptHandleStrategy receiptHandleStrategy;
 
     public void setReceiptHandleStrategy(ReceiptHandleStrategy receiptHandleStrategy) {
@@ -990,7 +970,6 @@ public class ReceiptStrategyContext {
 
 ```java
 public class ReceiptHandleStrategyFactory {
-
     public ReceiptHandleStrategyFactory() {
     }
 
@@ -1015,12 +994,9 @@ public class ReceiptHandleStrategyFactory {
 
 ```java
 public class Client {
-
     public static void main(String[] args) {
-
         //模拟回执
         List<Receipt> receiptList = ReceiptBuilder.genReceiptList();
-
 
         //策略上下文
         ReceiptStrategyContext context = new ReceiptStrategyContext();
@@ -1124,11 +1100,8 @@ public class RequestData {
 
 /**
  * 抽象处理者类
- * @author spikeCong
- * @date 2022/10/14
  **/
 public abstract class Handler {
-
     protected Handler successor = null;
 
     public void setSuccessor(Handler successor){
@@ -1139,7 +1112,6 @@ public abstract class Handler {
 }
 
 public class HandlerA extends Handler {
-
     @Override
     public void handle(RequestData requestData) {
         System.out.println("HandlerA 执行代码逻辑! 处理: " + requestData.getData());
@@ -1155,7 +1127,6 @@ public class HandlerA extends Handler {
 }
 
 public class HandlerB extends Handler {
-
     @Override
     public void handle(RequestData requestData) {
         System.out.println("HandlerB 执行代码逻辑! 处理: " + requestData.getData());
@@ -1171,7 +1142,6 @@ public class HandlerB extends Handler {
 }
 
 public class HandlerC extends Handler {
-
     @Override
     public void handle(RequestData requestData) {
         System.out.println("HandlerC 执行代码逻辑! 处理: " + requestData.getData());
@@ -1187,7 +1157,6 @@ public class HandlerC extends Handler {
 }
 
 public class Client {
-
     public static void main(String[] args) {
         Handler h1 = new HandlerA();
         Handler h2 = new HandlerB();
@@ -1212,13 +1181,9 @@ public class Client {
 ```java
 /**
  * 审核信息
- * @author spikeCong
- * @date 2022/10/14
  **/
 public class AuthInfo {
-
     private String code;
-
     private String info ="";
 
     public AuthInfo(String code, String... infos) {
@@ -1255,11 +1220,8 @@ public class AuthInfo {
 
 /**
  * 模拟审核服务
- * @author spikeCong
- * @date 2022/10/14
  **/
 public class AuthService {
-
     //审批信息 审批人Id+申请单Id
     private static Map<String,Date> authMap = new HashMap<String, Date>();
 
@@ -1280,11 +1242,8 @@ public class AuthService {
 }
 
 public class AuthController {
-
-    
     //审核接口
     public AuthInfo doAuth(String name, String orderId, Date authDate) throws ParseException {
-
         //三级审批
         Date date = null;
         //查询是否存在审核信息,查询条件: 审核人ID+订单ID,返回Map集合中的Date
@@ -1317,16 +1276,13 @@ public class AuthController {
                 return new AuthInfo("0001","单号: "+orderId,"状态: 等待一级审批负责人进行审批");
             }
         }
-
         
-       return new AuthInfo("0001","单号: "+orderId,"申请人:"+ name +", 状态: 审批完成!");
+        return new AuthInfo("0001","单号: "+orderId,"申请人:"+ name +", 状态: 审批完成!");
     }
 }
 
 public class Client {
-
     public static void main(String[] args) throws ParseException {
-
         AuthController controller = new AuthController();
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1388,9 +1344,8 @@ public class Client {
  * 抽象审核链类
  */
 public abstract class AuthLink {
-
     protected Logger logger = LoggerFactory.getLogger(AuthLink.class);
-
+    
     protected SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     protected String levelUserId;      //审核人ID
     protected String levelUserName;   //审核人姓名
@@ -1420,7 +1375,6 @@ public abstract class AuthLink {
  * 一级负责人
  */
 public class Level1AuthLink extends AuthLink {
-
     private Date beginDate = f.parse("2020-11-11 00:00:00");
     private Date endDate = f.parse("2020-11-31 23:59:59");
 
@@ -1449,7 +1403,6 @@ public class Level1AuthLink extends AuthLink {
  * 二级负责人
  */
 public class Level2AuthLink extends AuthLink {
-
     private Date beginDate = f.parse("2020-11-11 00:00:00");
     private Date endDate = f.parse("2020-11-31 23:59:59");
 
@@ -1473,14 +1426,12 @@ public class Level2AuthLink extends AuthLink {
 
         return next.doAuth(uId, orderId, authDate);
     }
-
 }
 
 /**
  * 三级负责人
  */
 public class Level3AuthLink extends AuthLink {
-
     public Level3AuthLink(String levelUserId, String levelUserName) {
         super(levelUserId, levelUserName);
     }
@@ -1497,17 +1448,13 @@ public class Level3AuthLink extends AuthLink {
 
         return next.doAuth(uId, orderId, authDate);
     }
-
 }
-
-
 ```
 
 测试
 
 ```java
 public class Client {
-
     private Logger logger = LoggerFactory.getLogger(ApiTest.class);
 
     @Test
@@ -1536,7 +1483,6 @@ public class Client {
         AuthService.auth("1000011", "1000998004813441");
         logger.info("测试结果：{}", "模拟一级负责人审批，段总");
         logger.info("测试结果：{}", JSON.toJSONString(authLink.doAuth("研发牛马", "1000998004813441", currentDate)));
-
     }
 }
 ```
@@ -1619,22 +1565,16 @@ public class Client {
 ```java
 /**
  * 抽象状态接口
- * @author spikeCong
- * @date 2022/10/17
  **/
 public interface State {
-
     //声明抽象方法,不同具体状态类可以有不同实现
     void handle(Context context);
 }
 
 /**
  * 上下文类
- * @author spikeCong
- * @date 2022/10/17
  **/
 public class Context {
-
     private State currentState; //维持一个对状态对象的引用
 
     public Context() {
@@ -1658,7 +1598,6 @@ public class Context {
 }
 
 public class ConcreteStateA implements State {
-
     @Override
     public void handle(Context context) {
         System.out.println("进入状态模式A......");
@@ -1672,7 +1611,6 @@ public class ConcreteStateA implements State {
 }
 
 public class ConcreteStateB implements State{
-
     @Override
     public void handle(Context context) {
         System.out.println("进入状态模式B......");
@@ -1685,11 +1623,8 @@ public class ConcreteStateB implements State{
     }
 }
 
-
 public class Client {
-
     public static void main(String[] args) {
-
         Context context = new Context();
 
         State state1 = new ConcreteStateA();
@@ -1717,17 +1652,12 @@ public class Client {
 /**
  * 交通灯类
  *    红灯(禁行) ,黄灯(警示),绿灯(通行) 三种状态.
- * @author spikeCong
- * @date 2022/10/17
  **/
 public class TrafficLight {
-
     //初始状态红灯
     private String state = "红";
-
     //切换为绿灯(通行)状态
     public void switchToGreen(){
-
         if("绿".equals(state)){//当前是绿灯
             System.out.println("当前为绿灯状态,无需切换!");
         }else if("红".equals(state)){
@@ -1740,7 +1670,6 @@ public class TrafficLight {
 
     //切换为黄灯(警示)状态
     public void switchToYellow(){
-
         if("黄".equals(state)){//当前是黄灯
             System.out.println("当前为黄灯状态,无需切换!");
         }else if("红".equals(state) || "绿".equals(state)){
@@ -1751,7 +1680,6 @@ public class TrafficLight {
 
     //切换为黄灯(警示)状态
     public void switchToRed(){
-
         if("红".equals(state)){//当前是绿灯
             System.out.println("当前为红灯状态,无需切换!");
         }else if("绿".equals(state)){
@@ -1772,11 +1700,8 @@ public class TrafficLight {
 /**
  * 交通灯类
  *    红灯(禁行) ,黄灯(警示),绿灯(通行) 三种状态.
- * @author spikeCong
- * @date 2022/10/17
  **/
 public class TrafficLight {
-
     //初始状态红灯
     State state = new Red();
 
@@ -1802,25 +1727,17 @@ public class TrafficLight {
 
 /**
  * 交通灯状态接口
- * @author spikeCong
- * @date 2022/10/17
  **/
 public interface State {
-
     void switchToGreen(TrafficLight trafficLight); //切换为绿灯
-
     void switchToYellow(TrafficLight trafficLight); //切换为黄灯
-
     void switchToRed(TrafficLight trafficLight); //切换为红灯
 }
 
 /**
  * 红灯状态类
- * @author spikeCong
- * @date 2022/10/17
  **/
 public class Red implements State {
-
     @Override
     public void switchToGreen(TrafficLight trafficLight) {
         System.out.println("红灯不能切换为绿灯!");
@@ -1839,11 +1756,8 @@ public class Red implements State {
 
 /**
  * 绿灯状态类
- * @author spikeCong
- * @date 2022/10/17
  **/
 public class Green implements State {
-
     @Override
     public void switchToGreen(TrafficLight trafficLight) {
         System.out.println("已是绿灯无须切换!");
@@ -1862,11 +1776,8 @@ public class Green implements State {
 
 /**
  * 黄灯状态类
- * @author spikeCong
- * @date 2022/10/17
  **/
 public class Yellow implements State {
-
     @Override
     public void switchToGreen(TrafficLight trafficLight) {
         System.out.println("绿灯亮起...时长:60秒!");
@@ -1884,7 +1795,6 @@ public class Yellow implements State {
 }
 
 public class Client {
-
     public static void main(String[] args) {
         TrafficLight trafficLight = new TrafficLight();
         trafficLight.switchToYellow();
@@ -1950,11 +1860,8 @@ public class Client {
 ```java
 /**
  * 迭代器接口
- * @author spikeCong
- * @date 2022/10/18
  **/
 public interface Iterator<E> {
-
     //判断集合中是否有下一个元素
     boolean hasNext();
 
@@ -1967,13 +1874,9 @@ public interface Iterator<E> {
 
 /**
  * 具体迭代器
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class ConcreteIterator<E> implements Iterator<E>{
-
     private int cursor; //游标
-
     private ArrayList<E> arrayList; //容器
 
     public ConcreteIterator(ArrayList<E> arrayList) {
@@ -2001,10 +1904,7 @@ public class ConcreteIterator<E> implements Iterator<E>{
 }
 
 public class Test01 {
-
-
     public static void main(String[] args) {
-
         ArrayList<String> names = new ArrayList<>();
         names.add("lisi");
         names.add("zhangsan");
@@ -2036,36 +1936,26 @@ public class Test01 {
 ```java
 /**
  * 抽象迭代器 IteratorIterator
- * @author spikeCong
- * @date 2022/10/18
  **/
 public interface IteratorIterator<E> {
-
     void reset();   //重置为第一个元素
     E next();   //获取下一个元素
     E currentItem();    //检索当前元素
     boolean hasNext();  //判断是否还有下一个元素存在
 }
 
-
 /**
  * 抽象集合 ListList
- * @author spikeCong
- * @date 2022/10/18
  **/
 public interface ListList<E> {
-
     //获取迭代器对象的抽象方法(面向接口编程)
     IteratorIterator<E> Iterator();
 }
 
 /**
  * 主题类
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class Topic {
-
     private String name;
 
     public Topic(String name) {
@@ -2083,11 +1973,8 @@ public class Topic {
 
 /**
  * 具体迭代器
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class TopicIterator implements IteratorIterator<Topic> {
-
     //Topic数组
     private Topic[] topics;
 
@@ -2125,11 +2012,8 @@ public class TopicIterator implements IteratorIterator<Topic> {
 
 /**
  * 具体集合类
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class TopicList implements ListList<Topic> {
-
     private Topic[] topics;
 
     public TopicList(Topic[] topics) {
@@ -2143,9 +2027,7 @@ public class TopicList implements ListList<Topic> {
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
         Topic[] topics = new Topic[4];
         topics[0] = new Topic("topic1");
         topics[1] = new Topic("topic2");
@@ -2222,11 +2104,8 @@ public class Client {
 ```java
 /**
  * 抽象商品父类
- * @author spikeCong
- * @date 2022/10/18
  **/
 public abstract class Product {
-
     private String name;  //商品名
     private LocalDate producedDate;  // 生产日期
     private double price;  //单品价格
@@ -2264,8 +2143,6 @@ public abstract class Product {
 
 /**
  * 糖果类
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class Candy extends Product{
     public Candy(String name, LocalDate producedDate, double price) {
@@ -2275,11 +2152,8 @@ public class Candy extends Product{
 
 /**
  * 酒水类
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class Wine extends Product{
-
     public Wine(String name, LocalDate producedDate, double price) {
         super(name, producedDate, price);
     }
@@ -2287,11 +2161,8 @@ public class Wine extends Product{
 
 /**
  * 水果类
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class Fruit extends Product{
-    
     //重量
     private float weight;
 
@@ -2317,15 +2188,10 @@ public class Fruit extends Product{
 ```java
 /**
  * 访问者接口-根据入参不同调用对应的重载方法
- * @author spikeCong
- * @date 2022/10/18
  **/
 public interface Visitor {
-
     public void visit(Candy candy);  //糖果重载方法
-    
-    public void visit(Wine wine);  //酒类重载方法
-    
+    public void visit(Wine wine);    //酒类重载方法
     public void visit(Fruit fruit);  //水果重载方法
 }
 ```
@@ -2337,13 +2203,10 @@ public interface Visitor {
 ```java
 /**
  * 折扣计价访问者类
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class DiscountVisitor implements Visitor {
-
     private LocalDate billDate;
-
+    
     public DiscountVisitor(LocalDate billDate) {
         this.billDate = billDate;
         System.out.println("结算日期: " + billDate);
@@ -2392,7 +2255,6 @@ public class DiscountVisitor implements Visitor {
     }
 
     public static void main(String[] args) {
-
         LocalDate billDate = LocalDate.now();
 
         Candy candy = new Candy("徐福记",LocalDate.of(2022,10,1),10.0);
@@ -2418,9 +2280,7 @@ public class DiscountVisitor implements Visitor {
 
 ```java
 public class Client {
-
     public static void main(String[] args) {
-
         //德芙巧克力,生产日期2002-5-1 ,原价 10元
         Candy candy = new Candy("德芙巧克力",LocalDate.of(2022,5,1),10.0);
 
@@ -2437,19 +2297,14 @@ public class Client {
 ```java
 /**
  * 接待者接口(抽象元素角色)
- * @author spikeCong
- * @date 2022/10/18
  **/
 public interface Acceptable {
-
     //接收所有的Visitor访问者的子类实现类
     public void accept(Visitor visitor);
 }
 
 /**
  * 糖果类
- * @author spikeCong
- * @date 2022/10/18
  **/
 public class Candy extends Product implements Acceptable{
     public Candy(String name, LocalDate producedDate, double price) {
@@ -2470,7 +2325,6 @@ public class Candy extends Product implements Acceptable{
 
 ```java
 public class Client {
-
     public static void main(String[] args) {
 
 //        //德芙巧克力,生产日期2002-5-1 ,原价 10元
@@ -2558,11 +2412,8 @@ public class Client {
 ```java
 /**
  * 发起人类
- * @author spikeCong
- * @date 2022/10/19
  **/
 public class Originator {
-
     private String state = "原始对象";
     private String id;
     private String name;
@@ -2630,11 +2481,8 @@ public class Originator {
 /**
  * 备忘录对象
  *     访问权限为: 默认,也就是同包下可见(保证只有发起者类可以访问备忘录类)
- * @author spikeCong
- * @date 2022/10/19
  **/
 class Memento {
-
     private String state = "从备份对象恢复为原始对象";
     private String id;
     private String name;
@@ -2654,13 +2502,10 @@ class Memento {
 
 /**
  * 负责人类-保存备忘录对象
- * @author spikeCong
- * @date 2022/10/19
  **/
 public class Caretaker {
-
     private Memento memento;
-
+    
     public Memento getMemento() {
         return memento;
     }
@@ -2671,7 +2516,6 @@ public class Caretaker {
 }
 
 public class Client {
-
     public static void main(String[] args) {
         //创建发起人对象
         Originator originator = new Originator();
@@ -2712,11 +2556,8 @@ public class Client {
 ```java
 /**
  * Memento 表示状态
- * @author spikeCong
- * @date 2022/10/19
  **/
 public class Memento {
-
     int money;    //所持金钱
     ArrayList fruits; //获得的水果
 
@@ -2746,18 +2587,7 @@ public class Memento {
 - Player玩家类,只要玩家的金币还够,就会一直进行游戏,在该类中会设置一个createMemento方法,其作用是保存当前玩家状态.还会包含一个restore撤销方法,相当于复活操作.
 
 ```java
-package com.mashibing.memento.example02;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-/**
- * @author spikeCong
- * @date 2022/10/19
- **/
 public class Player {
-
     private int money;      //所持金钱
     private List<String> fruits = new ArrayList();  //获得的水果
     private Random random = new Random();   //随机数对象
@@ -2789,7 +2619,6 @@ public class Player {
 
     //掷骰子游戏
     public void yacht(){
-
         int dice = random.nextInt(6) + 1;   //掷骰子
         if(dice == 1){
             money += 100;
@@ -2815,7 +2644,6 @@ public class Player {
                 memento.addFruit(fruit);
             }
         }
-
         return memento;
     }
 
@@ -2839,10 +2667,8 @@ public class Player {
 
 ```java
 public class MainApp {
-
     public static void main(String[] args) throws InterruptedException {
-
-        Player player = new Player(100);        //最初所持的金钱数
+        Player player = new Player(100);          		//最初所持的金钱数
         Memento memento = player.createMemento();       //保存最初状态
 
         for (int i = 0; i < 100; i++) {
@@ -2868,12 +2694,9 @@ public class MainApp {
             Thread.sleep(1000);
             System.out.println("");
         }
-
     }
 }
 ```
-
-
 
 ### 6.8.5 备忘录模式总结
 
@@ -2925,13 +2748,9 @@ public class MainApp {
 ```java
 /**
  * 订单类
- * @author spikeCong
- * @date 2022/10/19
  **/
 public class Order {
-
     private int diningTable;  //餐桌号码
-
     //存储菜名与份数
     private Map<String,Integer> foodMenu = new HashMap<>();
 
@@ -2954,37 +2773,26 @@ public class Order {
 
 /**
  * 厨师类 -> Receiver角色
- * @author spikeCong
- * @date 2022/10/19
  **/
 public class Chef {
-
     public void makeFood(int num,String foodName){
         System.out.println(num + "份," + foodName);
     }
 }
 
-
 /**
  * 抽象命令接口
- * @author spikeCong
- * @date 2022/10/19
  **/
 public interface Command {
-
     void execute(); //只需要定义一个统一的执行方法
 }
 
 /**
  * 具体命令
- * @author spikeCong
- * @date 2022/10/19
  **/
 public class OrderCommand implements Command {
-
     //持有接收者对象
     private Chef receiver;
-
     private Order order;
 
     public OrderCommand(Chef receiver, Order order) {
@@ -3012,11 +2820,8 @@ public class OrderCommand implements Command {
 
 /**
  * 服务员-> Invoker调用者
- * @author spikeCong
- * @date 2022/10/19
  **/
 public class Waiter {
-
     //可以持有很多的命令对象
     private ArrayList<Command> commands;
 
@@ -3044,9 +2849,7 @@ public class Waiter {
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
         Order order1 = new Order();
         order1.setDiningTable(1);
         order1.getFoodMenu().put("鲍鱼炒饭",1);
@@ -3074,8 +2877,6 @@ public class Client {
     }
 }
 ```
-
-
 
 ### 6.9.4 命令模式总结
 
@@ -3189,20 +2990,14 @@ value ::= integer
 ```java
 /**
  * 表达式解释器类
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class ExpressionInterpreter {
-
-    //Deque双向队列，可以从队列的两端增加或者删除元素
+   //Deque双向队列，可以从队列的两端增加或者删除元素
    private Deque<Long>  numbers = new LinkedList<>();
-
    
    //接收表达式进行解析
    public long interpret(String expression){
-
        String[] elements = expression.split(" ");
-
        int length = elements.length;
 
        //获取表达式中的数字
@@ -3265,21 +3060,15 @@ public class ExpressionInterpreter {
 ```java
 /**
  * 表达式接口
- * @author spikeCong
- * @date 2022/10/20
  **/
 public interface Expression {
-
     long interpret();
 }
 
 /**
  * 数字表达式
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class NumExpression implements Expression {
-
     private long number;
 
     public NumExpression(long number) {
@@ -3298,11 +3087,8 @@ public class NumExpression implements Expression {
 
 /**
  * 加法运算
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class PluExpression implements Expression{
-
     private Expression exp1;
     private Expression exp2;
 
@@ -3319,11 +3105,8 @@ public class PluExpression implements Expression{
 
 /**
  * 减法运算
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class SubExpression implements Expression {
-
     private Expression exp1;
     private Expression exp2;
 
@@ -3340,11 +3123,8 @@ public class SubExpression implements Expression {
 
 /**
  * 乘法运算
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class MulExpression implements Expression {
-
     private Expression exp1;
     private Expression exp2;
 
@@ -3361,11 +3141,8 @@ public class MulExpression implements Expression {
 
 /**
  * 除法
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class DivExpression implements Expression {
-
     private Expression exp1;
     private Expression exp2;
 
@@ -3382,17 +3159,13 @@ public class DivExpression implements Expression {
 
 //测试
 public class Test01 {
-
     public static void main(String[] args) {
-
         ExpressionInterpreter e = new ExpressionInterpreter();
         long result = e.interpret("6 2 3 2 4 / - + *");
         System.out.println(result);
     }
 }
 ```
-
-
 
 ### 7.0.4 解释器模式总结
 
@@ -3459,21 +3232,15 @@ public class Test01 {
 ```java
 /**
  * 抽象中介者
- * @author spikeCong
- * @date 2022/10/20
  **/
 public interface Mediator {
-
     void apply(String key);
 }
 
 /**
  * 具体中介者
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class MediatorImpl implements Mediator {
-
     @Override
     public void apply(String key) {
         System.out.println("最终中介者执行操作,key为: " + key);
@@ -3482,11 +3249,8 @@ public class MediatorImpl implements Mediator {
 
 /**
  * 抽象同事类
- * @author spikeCong
- * @date 2022/10/20
  **/
 public abstract class Colleague {
-
     private Mediator mediator;
 
     public Colleague(Mediator mediator) {
@@ -3502,11 +3266,8 @@ public abstract class Colleague {
 
 /**
  * 具体同事类
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class ConcreteColleagueA extends Colleague {
-
     public ConcreteColleagueA(Mediator mediator) {
         super(mediator);
     }
@@ -3519,7 +3280,6 @@ public class ConcreteColleagueA extends Colleague {
 }
 
 public class ConcreteColleagueB extends Colleague {
-
     public ConcreteColleagueB(Mediator mediator) {
         super(mediator);
     }
@@ -3532,9 +3292,7 @@ public class ConcreteColleagueB extends Colleague {
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
         //创建中介者
         MediatorImpl mediator = new MediatorImpl();
 
@@ -3545,7 +3303,6 @@ public class Client {
         c2.exec("key-B");
     }
 }
-
 
 ====在组件A中,通过中介者执行!
 最终中介者执行操作,key为: key-A
@@ -3562,24 +3319,17 @@ public class Client {
 ```java
 /**
  * 抽象中介者
- * @author spikeCong
- * @date 2022/10/20
  **/
 public abstract class Mediator {
-
     //申明一个联络方法
     public abstract void contact(String message,Person person);
 }
 
 /**
  * 抽象同事类
- * @author spikeCong
- * @date 2022/10/20
  **/
 public abstract class Person {
-
     protected String name;
-
     protected Mediator mediator;
 
     public Person(String name, Mediator mediator) {
@@ -3590,11 +3340,8 @@ public abstract class Person {
 
 /**
  * 中介机构
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class MediatorStructure extends Mediator {
-
     //中介要知晓房主和租房者的信息
     private HouseOwner houseOwner;
     private Tenant tenant;
@@ -3627,11 +3374,8 @@ public class MediatorStructure extends Mediator {
 
 /**
  * 具体同事类-房屋拥有者
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class HouseOwner extends Person{
-
     public HouseOwner(String name, Mediator mediator) {
         super(name, mediator);
     }
@@ -3649,11 +3393,8 @@ public class HouseOwner extends Person{
 
 /**
  * 具体同事类-承租人
- * @author spikeCong
- * @date 2022/10/20
  **/
 public class Tenant extends Person{
-
     public Tenant(String name, Mediator mediator) {
         super(name, mediator);
     }
@@ -3670,9 +3411,7 @@ public class Tenant extends Person{
 }
 
 public class Client {
-
     public static void main(String[] args) {
-
         //一个房主 一个租房者 一个中介机构
         MediatorStructure mediator = new MediatorStructure();
 

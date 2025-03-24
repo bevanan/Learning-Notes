@@ -916,11 +916,48 @@ INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT
   kubectl get pods --all-namespaces | grep Evicted | awk '{print $1 " " $2}' | xargs -L1 kubectl delete pod -n
   ```
 
+- 前几天的问题找到原因了，一直在脚本准备这个步骤出问题，是因为虽然我讲`pf_ansible_deploy`改回了`pf_seal_deploy`，但是我没重新编译clu镜像。。。。。，排查过程是看了下对应JOB的DETAIL那张表。发现脚本准备步骤走的是V3，才焕然大悟。况且，如果是sealos的话，DETAIL也不应该有那么多的步骤，sealos的只有4条。
+
+
+
+周五：
+
+- 原先install内对应的变量
+
+  ```yaml
+  --pk {{home.stdout}}/.ssh/id_rsa --user={{ ansible_user }} --clus
+  ```
+
+- 遇到问题：审批通过后的部署任务，一直卡住在运行中没有进展 --- 原因，执行引擎卡死，需要删除对应任务重来
+
+- 解决问题：在普通用户下，需要sudo kubectl的问题
+
+  ```yaml
+          - name: "{pf_step_msg}:kubernetes config"
+            shell: |
+              sudo mkdir -p {{home.stdout}}/.kube
+              sudo cp /root/.kube/config {{home.stdout}}/.kube/
+              sudo chown -R {{ansible_user}}:{{ansible_user}} {{home.stdout}}/.kube
+              sudo chmod 600 {{home.stdout}}/.kube/config
+            when: ansible_user != "root"
+  ```
+
   
 
+3.17
 
+本周任务主要负责 将部署改成ansible脚本
 
+周一：
 
+周二：成功执行完成脚本准备环节，下一步卸载出问题，排查到找不到文件。
+
+周三：
+
+- 排查有两个结果，一个是找不到param.json，另一个是找不到99.clean.yaml。在执行引擎看了下，是有成功复制了待执行的yaml，看来是路径不同，就看了数据库中script配的，确实少了一截。这下不得不换成与项目一致的方法了（JOB任务，在准备阶段通过generateJobDetl录入）。
+- 方法生成成功执行，但是后面的执行出了问题，就是页面是正常的执行，但是只是表面，内部的yaml一点都没执行。排查了下，看起来似乎没找到对应的hosts，这个hosts是带个编码的，询问得知后面根据跳板机再生成的文件。
+
+周四：
 
 
 

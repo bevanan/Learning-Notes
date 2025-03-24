@@ -1132,10 +1132,8 @@ public class Client {
 
     public static void main(String[] args) {
         Client client = new Client(new HisenseFactory());
-        AbstractTV tv = client.getTv();
-        AbstractFreezer freezer = client.getFreezer();
-        System.out.println(tv);
-        System.out.println(freezer);
+        System.out.println(client.getTv());
+        System.out.println(client.getFreezer());
     }
 }
 ```
@@ -1373,11 +1371,11 @@ public class RabbitMQClient1 {
 
 - set方式设置对象属性时,存在中间状态,并且属性校验时有前后顺序约束,逻辑校验的代码找不到合适的地方放置.
 
-  > 比如下面的代码,  创建对象后使用set 的方式，那就会导致在第一个 set 之后，对象处于无效状态
+  > 比如下面的代码，创建对象后使用set 的方式，那就会导致在第一个 set 之后，对象处于无效状态
   >
   > Rectangle r = new Rectangle ();  //无效状态
   >
-  > r.setWidth(2);  //无效状态
+  > r.setWidth(2);   //无效状态
   >
   > r.setHeight(3);  //有效状态
 
