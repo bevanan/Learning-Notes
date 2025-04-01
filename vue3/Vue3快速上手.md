@@ -593,7 +593,7 @@ function test(){
   } 
 </script>
 ```
-## 3.9.【watch】
+## 3.9. 【watch】
 
 - 作用：监视数据的变化（和`Vue2`中的`watch`作用一致）
 - 特点：`Vue3`中的`watch`只能监视以下**四种数据**：
@@ -1771,7 +1771,7 @@ app.mount('#app')
          }
        },
        //减
-       decrement(value:number){
+       decrement(value:number) {
          if(this.sum > 1){
            this.sum -= value
          }

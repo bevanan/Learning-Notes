@@ -191,13 +191,93 @@ public class KafkaConConsumer {
 }
 ```
 
+
+
 # 二、群组协调
 
 消费者要加入群组时，会向群组协调器发送一个JoinGroup请求，第一个加入群组的消费者成为群主，群主会获得群组的成员列表，并负责给每一个消费者分配分区。
 
-分配完毕后，群主把分配情况发送给群组协调器，协调器再把这些信息发送给所有的消费者，每个消费者只能看到自己的分配信息，只有群主知道群组里所有消费者的分配信息。**群组协调的工作会在消费者发生变化(新加入或者掉线)，主题中分区发生了变化（增加）时发生。**
+分配完毕后，群主把分配情况发送给群组协调器，协调器再把这些信息发送给所有的消费者，每个消费者只能看到自己的分配信息，只有群主知道群组里所有消费者的分配信息。**群组协调的工作会在消费者发生变化(新加入或者掉线)、主题中分区发生了变化（增加）时 发生。**
+
+Leader消费者的选举
+
+- **触发条件**：当消费者组**首次启动**或**发生重平衡**时，所有消费者会向协调器发送`JoinGroup`请求。
+- **选举规则**：
+  - 协调器从当前加入的消费者中选择一个作为**Leader消费者**，通常选择**第一个成功发送`JoinGroup`请求的消费者**（但严格来说，协调器可能根据内部逻辑选择，例如消费者ID的字典序）。
+  - Leader的选举**与分区分配策略无关**，仅用于组织本次重平衡的分区分配流程。
+
+分区分配流程
+
+1. **JoinGroup阶段**：
+
+   - 所有消费者发送`JoinGroup`请求，协调器收集它们的元数据（如订阅的Topic、分配策略支持情况等）。
+   - 协调器选举Leader消费者，并将**组成员列表**（包括所有消费者的信息）返回给Leader。
+
+2. **SyncGroup阶段**：
+
+   - **Leader消费者**根据分区分配策略（如Range、RoundRobin等），为所有消费者计算分区分配方案。
+
+   - Leader通过`SyncGroup`请求将分配方案提交给协调器。
+
+   - 协调器将分配方案分发给**所有消费者**，每个消费者仅收到自己分配到的分区列表。
+
+   - SyncGroup 所有交互均由客户端主动发起请求，服务端被动响应。但不同角色消费者在 SyncGroup 请求中携带的数据不同
+
+     | 消费者角色 | SyncGroup 请求内容                     | SyncGroup 响应内容           |
+     | :--------- | :------------------------------------- | :--------------------------- |
+     | Leader     | 携带完整的分区分配方案（`assignment`） | 无实际数据（仅确认提交成功） |
+     | Follower   | 空（不携带任何分配信息）               | 自身分配到的分区列表         |
+
+     - 协调器只是**暂存** Leader 提交的数据，不会主动推送，必须等待 Follower 主动拉取。
+
+示例流程
+
+假设一个消费者组有3个消费者（C1、C2、C3）：
+
+1. **重平衡触发**：C1率先发送`JoinGroup`请求。
+2. **选举Leader**：协调器选择C1为Leader，返回组成员列表（C1、C2、C3）。
+3. **分区分配**：C1根据策略（如RoundRobin）计算分配方案，提交给协调器。
+4. **结果同步**：协调器通过`SyncGroup`响应将分配结果分别发给C1、C2、C3。
+
+
 
 ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1670940113013/b070d19ea7584a088c03fed8acfb0b96.png)
+
+
+
+```mermaid
+sequenceDiagram
+    participant Leader as Leader消费者
+    participant Follower1 as Follower消费者1
+    participant Follower2 as Follower消费者2
+    participant Coordinator as 组协调器
+
+    Leader->>Coordinator: SyncGroup请求（携带全部分配方案）
+    Coordinator-->>Leader: SyncGroup响应（确认提交）
+
+    Follower1->>Coordinator: SyncGroup请求（空）
+    Coordinator-->>Follower1: SyncGroup响应（分配结果）
+
+    Follower2->>Coordinator: SyncGroup请求（空）
+    Coordinator-->>Follower2: SyncGroup响应（分配结果）
+```
+
+问题澄清：
+
+Q：如果 Follower 先于 Leader 发送 `SyncGroup` 请求会怎样？
+
+- **协调器会阻塞该请求**，直到收到 Leader 提交的分配方案。若等待超时（`session.timeout.ms`），会触发新一轮重平衡。
+
+Q：Leader 提交分配方案后，协调器宕机怎么办？
+
+- 消费者组会重新选举协调器，并从 `__consumer_offsets` 主题中恢复组状态。若 Leader 已提交分配方案但未同步给所有消费者，会触发重平衡。
+
+Q：为什么 Follower 需要主动拉取，不能由 Leader 直接分发？
+
+- **安全性**：若 Leader 直接分发，需确保所有 Follower 可信，且网络拓扑可直达，这在分布式系统中不现实。
+- **去中心化**：通过协调器中转，保证分配结果的权威性和一致性。
+
+
 
 ## 一、组协调器
 
@@ -229,15 +309,21 @@ public class KafkaConConsumer {
 
        默认情况下, `__consumer_ offset`有50个分区, 每个消费组都会对应其中的一个分区，对应的逻辑为 hash(`group.id`)%分区数。
 
-4. **负载均衡（Rebalance）**
+4. **负载均衡（Rebalance 重平衡）**
 
    - 每当消费者数量发生变化（例如某个消费者加入或退出群组）时，组协调器会启动负载均衡（rebalance）过程。在这个过程中，消费者群组中的分区会被重新分配，以确保每个消费者负担合理。
    - ==负载均衡通常会导致消费者在某段时间内暂停消费消息==，直到新的分区分配完成。
 
 5. **处理消费者的心跳**
 
-   - 为了确保消费者仍然活跃，组协调器会定期接收每个消费者的“心跳”信号。如果某个消费者长时间未能发送心跳信号，组协调器会认为该消费者已失效并触发再平衡，将该消费者负责的分区分配给其他消费者。
+   - **参数**：
 
+     - `session.timeout.ms`：协调器等待心跳的超时时间（默认10秒），超时则剔除消费者。
+     - `heartbeat.interval.ms`：消费者发送心跳的频率（默认3秒），需小于`session.timeout.ms`。
+     - `max.poll.interval.ms`：消费者处理消息的最大间隔（默认5分钟），超时触发离开组。
+     
+   - **作用**：维持消费者会话，避免误判离线。
+   
      
 
 **组协调器的工作流程：**
@@ -245,7 +331,7 @@ public class KafkaConConsumer {
 1. **消费者启动并加入群组：**
    - 消费者启动时，会向 Kafka 集群中的组协调器发送请求，申请加入某个消费者群组。
    - 组协调器接收到加入请求后，会检查群组内当前的消费者和分区信息，并将分区分配给新的消费者。
-2. **负载均衡（Rebalance）：**
+2. **负载均衡（Rebalance 重平衡）：**
    - 如果消费者群组内的消费者数量变化（例如，新消费者加入或已有消费者退出），组协调器会启动负载均衡操作，重新分配分区。
    - 在负载均衡过程中，`消费者会被暂停消费`，直到新的分配完成。
 3. **消费者提交偏移量：**
@@ -259,20 +345,62 @@ public class KafkaConConsumer {
 
 ## 二、消费者协调器
 
-**每个客户端（消费者的客户端）都会有一个消费者协调器,** 他的主要作用就是向组协调器发起请求做交互, 以及处理回调逻辑
+**每个客户端（消费者的客户端）都会有一个消费者协调器**，他的主要作用就是向组协调器发起请求做交互，以及处理回调逻辑
 
 1. 向组协调器发起入组请求
-2. 向组协调器发起同步组请求(如果是Leader客户端,则还会计算分配策略数据放到入参传入)
+2. 向组协调器发起同步组请求(如果是Leader客户端，则还会计算分配策略数据放到入参传入)
 3. 发起离组请求
 4. 保持跟组协调器的心跳线程
 5. 向组协调器发送提交已消费偏移量的请求
 
+
+
+```mermaid
+sequenceDiagram
+    participant ConsumerCoordinator as 消费者协调器（客户端）
+    participant GroupCoordinator as 组协调器（Broker）
+
+    ConsumerCoordinator->>GroupCoordinator: FindCoordinator 请求
+    GroupCoordinator-->>ConsumerCoordinator: 返回组协调器地址
+
+    loop 消费者组生命周期
+        ConsumerCoordinator->>GroupCoordinator: JoinGroup 请求
+        GroupCoordinator-->>ConsumerCoordinator: 返回组成员信息（Leader/Follower）
+
+        alt 是 Leader
+            ConsumerCoordinator->>ConsumerCoordinator: 计算分区分配方案
+            ConsumerCoordinator->>GroupCoordinator: SyncGroup 请求（携带分配方案）
+        else 是 Follower
+            ConsumerCoordinator->>GroupCoordinator: SyncGroup 请求（空）
+        end
+
+        GroupCoordinator-->>ConsumerCoordinator: 返回分区分配结果
+
+        loop 心跳维持
+            ConsumerCoordinator->>GroupCoordinator: Heartbeat 请求
+            GroupCoordinator-->>ConsumerCoordinator: 确认存活
+        end
+    end
+```
+
 ## 三、消费者加入分组的流程
 
 1. 客户端启动的时候, 或者重连的时候会发起JoinGroup的请求来申请加入的组中。
-2. 当前客户端都已经完成JoinGroup之后, 客户端会收到JoinGroup的回调, 然后客户端会再次向组协调器发起SyncGroup的请求来获取新的分配方案
-3. 1)当消费者客户端关机/异常 时, 会触发离组LeaveGroup请求。2)当然有主动的消费者协调器发起离组请求，也有组协调器一直会有针对每个客户端的心跳检测, 如果监测失败,则就会将这个客户端踢出Group。
-4. 客户端加入组内后, 会一直保持一个心跳线程,来保持跟组协调器的一个感知。并且组协调器会针对每个加入组的客户端做一个心跳监测，如果监测到过期, 则会将其踢出组内并再平衡。
+2. 当前客户端都已经完成JoinGroup之后，客户端会收到JoinGroup的回调，然后客户端会再次向组协调器发起SyncGroup的请求来获取新的分配方案
+   1. 当消费者客户端关机/异常 时，会触发离组LeaveGroup请求。
+   2. 当然有主动的消费者协调器发起离组请求，也有组协调器一直会有针对每个客户端的心跳检测，如果监测失败，则就会将这个客户端踢出Group。
+3. 客户端加入组内后，会一直保持一个心跳线程，来保持跟组协调器的一个感知。并且组协调器会针对每个加入组的客户端做一个心跳监测，如果监测到过期，则会将其踢出组内并再平衡。
+
+
+
+**常见误解**
+
+- **误解**：“协调器直接分配分区。”
+  **纠正**：协调器仅传递分配结果，实际分配由Leader消费者计算。
+- **误解**：“Leader消费者必须处理更多数据。”
+  **纠正**：Leader角色仅用于协调分配，其消费的分区数量与其他消费者一致。
+
+
 
 ## 四、消费者消费的offset的存储
 
@@ -353,12 +481,49 @@ ConsumerRebalancelistener有两个需要实现的方法。
 
 具体使用，我们先创建一个3分区的主题，然后实验一下，
 
-在再均衡开始之前会触发onPartitionsRevoked方法
+在再均衡开始之前会触发onPartitionsRevoked 方法
 
-在再均衡开始之后会触发onPartitionsAssigned方法
-
-
+在再均衡开始之后会触发onPartitionsAssigned 方法
 
 
 
 对应代码在 rebalance
+
+
+
+
+
+**彻底解决问题**需结合：
+
+- 合理的手动提交策略（同步+异步）。
+
+  ```java
+  props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // 关闭自动提交
+  
+  consumer.subscribe(topics, new ConsumerRebalanceListener() {
+      @Override
+      public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+          // 同步提交偏移量，确保提交成功
+          consumer.commitSync();
+      }
+  
+      @Override
+      public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+          // 从外部存储加载偏移量（可选）
+          partitions.forEach(partition -> 
+              consumer.seek(partition, getOffsetFromDB(partition)));
+      }
+  });
+  
+  while (true) {
+      ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+      for (ConsumerRecord<String, String> record : records) {
+          processRecord(record);
+      }
+      consumer.commitAsync(); // 异步提交（或同步提交）
+  }
+  ```
+
+- 处理逻辑的幂等性。
+
+- 可能的**外部偏移量存储**（如数据库）

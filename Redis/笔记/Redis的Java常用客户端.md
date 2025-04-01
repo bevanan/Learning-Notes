@@ -101,11 +101,11 @@ Redisson 对字符串的操作支持比较差
 添加对应的依赖
 
 ```xml
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson</artifactId>
-            <version>3.16.1</version>
-        </dependency>
+<dependency>
+    <groupId>org.redisson</groupId>
+    <artifactId>redisson</artifactId>
+    <version>3.16.1</version>
+</dependency>
 ```
 
 添加对应的配置类
@@ -113,7 +113,6 @@ Redisson 对字符串的操作支持比较差
 ```java
 @Configuration
 public class MyRedisConfig {
-
     @Bean
     public RedissonClient redissonClient(){
         Config config = new Config();
@@ -130,32 +129,30 @@ public class MyRedisConfig {
 
 POM文件 片段
 
-```
-     <!-- spring-redis -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
+```xml
+<!-- spring-redis -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
 
-        <!-- redisson -->
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson</artifactId>
-            <version>3.30.0</version>
-        </dependency>
-        <!-- jedis -->
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>3.6.3</version>
-        </dependency>
+<!-- redisson -->
+<dependency>
+    <groupId>org.redisson</groupId>
+    <artifactId>redisson</artifactId>
+    <version>3.30.0</version>
+</dependency>
+<!-- jedis -->
+<dependency>
+    <groupId>redis.clients</groupId>
+    <artifactId>jedis</artifactId>
+    <version>3.6.3</version>
+</dependency>
 ```
 
 test代码
 
-```
-package com.msb.caffeine.lock;
-
+```java
 import org.junit.jupiter.api.Test;
 import org.redisson.api.*;
 import org.redisson.client.protocol.ScoredEntry;
@@ -448,15 +445,10 @@ public class TestClient {
             }
         }
     }
-
-
 }
-
 ```
 
-```
-package com.msb.caffeine.config;
-
+```java
 import org.redisson.Redisson;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
@@ -481,12 +473,9 @@ public class MyRedissonConfig {
         return redisson;
     }
 }
-
 ```
 
-```
-package com.msb.caffeine.config;
-
+```java
 import com.msb.caffeine.service.RedisMessageListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -535,5 +524,4 @@ public class RedisConfig {
         return container;
     }
 }
-
 ```

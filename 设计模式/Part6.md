@@ -840,22 +840,8 @@ public class Receipt {
         this.message = message;
         this.type = type;
     }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
+    
+    // getter setter ...
 }
 ```
 
@@ -997,7 +983,6 @@ public class Client {
     public static void main(String[] args) {
         //模拟回执
         List<Receipt> receiptList = ReceiptBuilder.genReceiptList();
-
         //策略上下文
         ReceiptStrategyContext context = new ReceiptStrategyContext();
 
@@ -1053,6 +1038,10 @@ public class Client {
 
 
 **设计原则和思想其实比设计模式更加的普适和重要,掌握了代码的设计原则和思想,我们自然而然的就可以使用到设计模式,还有可能自己创建出一种新的设计模式.**
+
+
+
+
 
 ## 6.4 职责链模式
 

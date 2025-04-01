@@ -1,4 +1,4 @@
-# MySQL-突击班（第三天）
+# MySQL（第三天）
 
 ## 一、redo log
 
