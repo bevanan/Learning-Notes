@@ -34,7 +34,7 @@
 >
 > 如果，现在长这样
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725795434018/bd104e105a0c46bca7054dc2cde77b74.png)
+> <img src="https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725795434018/bd104e105a0c46bca7054dc2cde77b74.png" alt="image.png" style="zoom:67%;" />
 >
 > 现在有一个事务ID为2，要修改这个数据，将name修改为李四
 >
@@ -115,8 +115,8 @@
 > 
 > 	const ids_t::value_type*	p = m_ids.data();
 > 	// 如果上述情况都不满足，无法判断可见还是不可见，此时需要拿着当前行的事务ID，以及活跃事务列表开始判断。
->  // 1、如果我发现当前行的事务ID，在活跃事务列表中。此时在Read View来说，这个事务没提交，不可见。
->  // 2、如果我发现当前行的事务ID，不在活跃事务列表中，说明创建Read View时候，你就提交了，可见。
+>      // 1、如果我发现当前行的事务ID，在活跃事务列表中。此时在Read View来说，这个事务没提交，不可见。
+>      // 2、如果我发现当前行的事务ID，不在活跃事务列表中，说明创建Read View时候，你就提交了，可见。
 > 	return(!std::binary_search(p, p + m_ids.size(), id));
 > }
 > ```
@@ -149,7 +149,7 @@
 |              | 修改了这个数据，并且提交事务 |
 | 再次查询数据 |                              |
 
-事务A，能传到事务B提交的数据么？
+事务A，能查到事务B提交的数据么？
 
 面试被问到的话，先问是RC还是RR的隔离级别。~~~
 

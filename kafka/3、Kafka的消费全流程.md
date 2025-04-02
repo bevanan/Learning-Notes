@@ -270,7 +270,7 @@ Q：如果 Follower 先于 Leader 发送 `SyncGroup` 请求会怎样？
 
 Q：Leader 提交分配方案后，协调器宕机怎么办？
 
-- 消费者组会重新选举协调器，并从 `__consumer_offsets` 主题中恢复组状态。若 Leader 已提交分配方案但未同步给所有消费者，会触发重平衡。
+- 消费者组会重新选举协调器，并从 `__consumer_offsets 主题`中恢复组状态。
 
 Q：为什么 Follower 需要主动拉取，不能由 Leader 直接分发？
 
@@ -385,7 +385,7 @@ sequenceDiagram
 
 ## 三、消费者加入分组的流程
 
-1. 客户端启动的时候, 或者重连的时候会发起JoinGroup的请求来申请加入的组中。
+1. 客户端启动的时候, 或者重连的时候会 发起JoinGroup的请求来申请加入的组中。
 2. 当前客户端都已经完成JoinGroup之后，客户端会收到JoinGroup的回调，然后客户端会再次向组协调器发起SyncGroup的请求来获取新的分配方案
    1. 当消费者客户端关机/异常 时，会触发离组LeaveGroup请求。
    2. 当然有主动的消费者协调器发起离组请求，也有组协调器一直会有针对每个客户端的心跳检测，如果监测失败，则就会将这个客户端踢出Group。
@@ -471,7 +471,7 @@ kafka-topics.bat --bootstrap-server localhost:9092  --create --topic rebalance -
 
 ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1670940113013/7af6e805d1d14056bdfd5ae0634d71a7.png)
 
-在为消费者分配新分区或移除旧分区时,可以通过消费者API执行一些应用程序代码，在调用 subscribe()方法时传进去一个 ConsumerRebalancelistener实例就可以了。
+在为消费者分配新分区或移除旧分区时,可以通过消费者API执行一些应用程序代码，在调用 subscribe()方法时传进去一个  ConsumerRebalancelistener实例就可以了。
 
 ConsumerRebalancelistener有两个需要实现的方法。
 
