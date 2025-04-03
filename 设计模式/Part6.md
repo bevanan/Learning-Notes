@@ -897,7 +897,7 @@ public class Client {
 
 **2 ) 使用策略模式进行优化**
 
-通过策略模式, 将所有的if-else分支的业务逻辑抽取为各种策略类,让客户端去依赖策略接口,保证具体策略类的改变不影响客户端.
+通过策略模式，将所有的if-else分支的业务逻辑抽取为各种策略类，让客户端去依赖策略接口，保证具体策略类的改变不影响客户端。
 
 - 策略接口
 
@@ -908,7 +908,6 @@ public class Client {
 public interface ReceiptHandleStrategy {
     void handleReceipt(Receipt receipt);
 }
-
 ```
 
 - 具体策略类
@@ -985,12 +984,13 @@ public class Client {
         List<Receipt> receiptList = ReceiptBuilder.genReceiptList();
         //策略上下文
         ReceiptStrategyContext context = new ReceiptStrategyContext();
-
+		//获取置策略
+        ReceiptHandleStrategyFactory.init();
+        
         //策略模式将策略的 定义、创建、使用这三部分进行了解耦
         for (Receipt receipt : receiptList) {
-            //获取置策略
-            ReceiptHandleStrategyFactory.init();
-            ReceiptHandleStrategy strategy = ReceiptHandleStrategyFactory.getReceiptHandleStrategy(receipt.getType());
+            ReceiptHandleStrategy strategy = ReceiptHandleStrategyFactory
+                .getReceiptHandleStrategy(receipt.getType());
             //设置策略
             context.setReceiptHandleStrategy(strategy);
             //执行策略

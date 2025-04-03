@@ -475,9 +475,9 @@ kafka-topics.bat --bootstrap-server localhost:9092  --create --topic rebalance -
 
 ConsumerRebalancelistener有两个需要实现的方法。
 
-1) public void onPartitionsRevoked( Collection< TopicPartition> partitions)方法会在再均衡开始之前和消费者停止读取消息之后被调用。如果在这里提交偏移量，下一个接管分区的消费者就知道该从哪里开始读取了
+1) `public void onPartitionsRevoked(Collection<TopicPartition> partitions)`方法会在再均衡开始之前和消费者停止读取消息之后被调用。如果在这里提交偏移量，下一个接管分区的消费者就知道该从哪里开始读取了
 
-2) public void onPartitionsAssigned( Collection< TopicPartition> partitions)方法会在重新分配分区之后和消费者开始读取消息之前被调用。
+2) `public void onPartitionsAssigned(Collection<TopicPartition> partitions)`方法会在重新分配分区之后和消费者开始读取消息之前被调用。
 
 具体使用，我们先创建一个3分区的主题，然后实验一下，
 
@@ -489,16 +489,94 @@ ConsumerRebalancelistener有两个需要实现的方法。
 
 对应代码在 rebalance
 
+例子中从中间开始，也就是加入消费者3后出发onPartitionsAssigned方法，然后开始消费。
+
+其中用ConcurrentHashMap来当作持久层，触发onPartitionsRevoked保存每个分区的偏移量，重平衡后触发onPartitionsAssigned从持久层获取每个分区的偏移量，然后用`consumer.seek(topicPartition, partitionOffsetMap.get(topicPartition));`继续消费
+
+在均衡监听器
+
+```java
+// 消费者创建前指定监听器
+public ConsumerWorker(boolean isStop) {
+    // 设置属性
+    Properties properties = new Properties();
+    // 指定连接的kafka服务器的地址
+    properties.put("bootstrap.servers", "127.0.0.1:9092");
+    // 设置String的反序列化
+    properties.put("key.deserializer", StringDeserializer.class);
+    properties.put("value.deserializer", StringDeserializer.class);
+    properties.put(ConsumerConfig.GROUP_ID_CONFIG, RebalanceConsumer.GROUP_ID);
+    /* 取消自动提交 */
+    properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+    this.consumer = new KafkaConsumer<String, String>(properties);
+    this.currOffsets = new HashMap<TopicPartition, OffsetAndMetadata>();  // 保存 每个分区的消费偏移量
+    System.out.println("consumer-hashcode:" + consumer.hashCode());
+    // 订阅指定监听器
+    consumer.subscribe(Collections.singletonList("rebalance"), new HandlerRebalance(currOffsets, consumer));
+}
+
+
+/**
+ * 类说明：再均衡监听器
+ */
+public class HandlerRebalance implements ConsumerRebalanceListener {
+    /*模拟一个保存分区偏移量的数据库表*/
+    public final static ConcurrentHashMap<TopicPartition, Long> partitionOffsetMap = new ConcurrentHashMap<TopicPartition, Long>();
+    private final Map<TopicPartition, OffsetAndMetadata> currOffsets;
+    private final KafkaConsumer<String, String> consumer;
+    // private final Transaction  tr事务类的实例
+
+    public HandlerRebalance(Map<TopicPartition, OffsetAndMetadata> currOffsets, KafkaConsumer<String, String> consumer) {
+        this.currOffsets = currOffsets;
+        this.consumer = consumer;
+    }
+
+    // 分区再均衡之前
+    @Override
+    public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+        final String id = Thread.currentThread().getId() + "";
+        System.out.println(id + "-onPartitionsRevoked参数值为：" + partitions);
+        System.out.println(id + "-服务器准备分区再均衡，提交偏移量。当前偏移量为：" + currOffsets);
+        // 我们可以不使用consumer.commitSync(currOffsets);
+        // 提交偏移量到kafka,由我们自己维护*/
+        // 开始事务
+        // 偏移量写入数据库
+        System.out.println("分区偏移量表中：" + partitionOffsetMap);
+        for (TopicPartition topicPartition : partitions) {
+            partitionOffsetMap.put(topicPartition, currOffsets.get(topicPartition).offset());
+        }
+        consumer.commitSync(currOffsets);
+        // 提交业务数和偏移量入库  tr.commit
+    }
+
+    // 分区再均衡完成以后
+    @Override
+    public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+        final String id = Thread.currentThread().getId() + "";
+        System.out.println(id + "-再均衡完成，onPartitionsAssigned参数值为：" + partitions);
+        System.out.println("分区偏移量表中：" + partitionOffsetMap);
+        for (TopicPartition topicPartition : partitions) {
+            System.out.println(id + "-topicPartition" + topicPartition);
+            // 模拟从数据库中取得上次的偏移量
+            Long offset = partitionOffsetMap.get(topicPartition);
+            if (offset == null) continue;
+            consumer.seek(topicPartition, partitionOffsetMap.get(topicPartition));
+        }
+    }
+}
+
+```
 
 
 
 
-**彻底解决问题**需结合：
+
+DS答案，**彻底解决漏消费问题**需结合：
 
 - 合理的手动提交策略（同步+异步）。
 
   ```java
-  props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // 关闭自动提交
+  properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // 关闭自动提交
   
   consumer.subscribe(topics, new ConsumerRebalanceListener() {
       @Override
