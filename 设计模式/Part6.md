@@ -1076,14 +1076,7 @@ public class RequestData {
     public RequestData(String data) {
         this.data = data;
     }
-
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
-        this.data = data;
-    }
+	// getter setter...
 }
 
 
@@ -1104,9 +1097,7 @@ public class HandlerA extends Handler {
     @Override
     public void handle(RequestData requestData) {
         System.out.println("HandlerA 执行代码逻辑! 处理: " + requestData.getData());
-
         requestData.setData(requestData.getData().replace("A",""));
-
         if(successor != null){
             successor.handle(requestData);
         }else{
@@ -1116,33 +1107,11 @@ public class HandlerA extends Handler {
 }
 
 public class HandlerB extends Handler {
-    @Override
-    public void handle(RequestData requestData) {
-        System.out.println("HandlerB 执行代码逻辑! 处理: " + requestData.getData());
-
-        requestData.setData(requestData.getData().replace("B",""));
-
-        if(successor != null){
-            successor.handle(requestData);
-        }else{
-            System.out.println("执行中止!");
-        }
-    }
+    // System.out.println("HandlerB 执行代码逻辑! 处理: " + requestData.getData());
 }
 
 public class HandlerC extends Handler {
-    @Override
-    public void handle(RequestData requestData) {
-        System.out.println("HandlerC 执行代码逻辑! 处理: " + requestData.getData());
-
-        requestData.setData(requestData.getData());
-
-        if(successor != null){
-            successor.handle(requestData);
-        }else{
-            System.out.println("执行中止!");
-        }
-    }
+    // System.out.println("HandlerC 执行代码逻辑! 处理: " + requestData.getData());
 }
 
 public class Client {
@@ -1154,9 +1123,15 @@ public class Client {
         h2.setSuccessor(h3);
         RequestData requestData = new RequestData("请求数据ABCDE");
         h1.handle(requestData);
+        System.out.println(requestData.getData());
     }
-
 }
+
+HandlerA 执行代码逻辑! 处理: 请求数据ABCDE
+HandlerB 执行代码逻辑! 处理: 请求数据BCDE
+HandlerC 执行代码逻辑! 处理: 请求数据CDE
+执行中止!
+请求数据DE
 ```
 
 ### 6.4.4 职责链模式应用实例
@@ -1168,9 +1143,7 @@ public class Client {
 **1) 不使用设计模式**
 
 ```java
-/**
- * 审核信息
- **/
+// 审核信息
 public class AuthInfo {
     private String code;
     private String info ="";
@@ -1181,52 +1154,27 @@ public class AuthInfo {
             info = this.info.concat(str +" ");
         }
     }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getInfo() {
-        return info;
-    }
-
-    public void setInfo(String info) {
-        this.info = info;
-    }
-
-    @Override
-    public String toString() {
-        return "AuthInfo{" +
-                "code='" + code + '\'' +
-                ", info='" + info + '\'' +
-                '}';
-    }
+	// getter setter toString ...
 }
 
-/**
- * 模拟审核服务
- **/
+// 模拟审核服务
 public class AuthService {
-    //审批信息 审批人Id+申请单Id
-    private static Map<String,Date> authMap = new HashMap<String, Date>();
+    // 审批信息 审批人Id+申请单Id
+    private static Map<String, Date> authMap = new HashMap<>();
 
     /**
      * 审核流程
-     * @param uId    审核人id
-     * @param orderId  审核单id
+     * @param uId     审核人id
+     * @param orderId 审核单id
      */
-    public static void auth(String uId, String orderId){
+    public static void auth(String uId, String orderId) {
         System.out.println("进入审批流程,审批人ID: " + uId);
-        authMap.put(uId.concat(orderId),new Date());
+        authMap.put(uId.concat(orderId), new Date());
     }
 
-    //查询审核结果
-    public static Date queryAuthInfo(String uId, String orderId){
-        return authMap.get(uId.concat(orderId)); //key=审核人id+审核单子id
+    // 查询审核结果
+    public static Date queryAuthInfo(String uId, String orderId) {
+        return authMap.get(uId.concat(orderId)); // key=审核人id+审核单子id
     }
 }
 
@@ -1290,36 +1238,36 @@ public class Client {
          */
         AuthService.auth("1000013", "100001000010000");
         System.out.println("三级负责人审批完成,审批人: 王工");
-
         System.out.println("===========================================================================");
 
         //二级审核
-        //1.调用doAuth方法,模拟发送申请人相关信息
         AuthInfo info2 = controller.doAuth("研发小周", "100001000010000", date);
         System.out.println("当前审核状态:  " + info2.getInfo());
 
-        /**
-         * 2.模拟进行审核操作, 虚拟审核人ID: 1000012
-         * 调用auth() 方法进行审核操作, 就是向Map中添加一个 审核人ID和申请单ID
-         */
         AuthService.auth("1000012", "100001000010000");
         System.out.println("二级负责人审批完成,审批人: 张经理");
-
         System.out.println("===========================================================================");
 
         //一级审核
-        //1.调用doAuth方法,模拟发送申请人相关信息
         AuthInfo info3 = controller.doAuth("研发小周", "100001000010000", date);
         System.out.println("当前审核状态:  " + info3.getInfo());
 
-        /**
-         * 2.模拟进行审核操作, 虚拟审核人ID: 1000012
-         * 调用auth() 方法进行审核操作, 就是向Map中添加一个 审核人ID和申请单ID
-         */
         AuthService.auth("1000011", "100001000010000");
         System.out.println("一级负责人审批完成,审批人: 罗总");
     }
 }
+
+当前审核状态:  单号: 100001000010000 状态: 等待三级审批负责人进行审批 
+进入审批流程,审批人ID: 1000013
+三级负责人审批完成,审批人: 王工
+===========================================================================
+当前审核状态:  单号: 100001000010000 状态: 等待一级审批负责人进行审批 
+进入审批流程,审批人ID: 1000012
+二级负责人审批完成,审批人: 张经理
+===========================================================================
+当前审核状态:  单号: 100001000010000 状态: 等待一级审批负责人进行审批 
+进入审批流程,审批人ID: 1000011
+一级负责人审批完成,审批人: 罗总
 ```
 
 **2 ) 职责链模式重构代码**

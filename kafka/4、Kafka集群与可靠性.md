@@ -22,19 +22,21 @@
 
 192.68.10.7 的配置信息修改
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/156b6579a45f426294c034030e653b58.png)
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/156b6579a45f426294c034030e653b58.png) 
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/74a5d5271b7f47d2a99e0988b09e1c80.png)
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/74a5d5271b7f47d2a99e0988b09e1c80.png) 
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/9095c87e89034107a40326eb596bbf41.png)
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/9095c87e89034107a40326eb596bbf41.png) 
 
 192.168.10.8的配置信息修改
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/71b91ac433864925aa4f9d886f12f708.png)
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/71b91ac433864925aa4f9d886f12f708.png) 
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/cd990f2e9b874f01ade5c75c4ee646b2.png)
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/cd990f2e9b874f01ade5c75c4ee646b2.png) 
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/d7052fc16a3d4347851f288e37baee16.png)
+![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/d7052fc16a3d4347851f288e37baee16.png) 
+
+
 
 ## Kafka集群原理
 
@@ -177,3 +179,15 @@ min.insync.replicas=3（等于副本数），这种情况下要一直保证ISR�
 注意下，kafka也会有小时时间到期如何处理处理回收，这个在本期课程有讲，但是笔记内并没有相关记录。 
 
 <img src="/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/kafka/4、Kafka集群与可靠性.assets/image-20241023125344394.png" alt="image-20241023125344394" style="zoom:50%;" />
+
+
+
+
+
+
+
+
+
+存储机制
+
+清理垃圾

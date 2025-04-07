@@ -961,6 +961,42 @@ INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT
 
 
 
+
+
+4.7
+
+周一：
+
+- 发现问题：kubelet中的service配置文件的要与containerd的一致
+
+  ```
+  containerd
+  [plugins."io.containerd.grpc.v1.cri"]
+      sandbox_image = "{{containerd_harbor_domain}}:{{containerd_harbor_port}}/paas_public/kube-system/pause-{{ 'arm64' if machine == 'arm' else 'amd64' }}:3.7"
+  
+  kubelet
+  {% if machine != "arm" %}
+    --pod-infra-container-image={{kubelet_image_repository_path}}/pause-amd64:3.7 \
+  {% endif %}
+  ```
+
+  最修改的话，就需要修改原harbor路径，做一个新的提交
+
+  ```docker
+  docker pull 10.1.12.220/paas_public/kube-system/pause:3.7
+  
+  docker login http://harbor.paas.nl:10081  -u admin -p Nlpaas123
+  docker pull harbor.paas.nl:10081/nlautotest_p-testip_production/yuappdemo:1.0.0
+  docker tag harbor.paas.nl:10081/nlautotest_p-testip_production/yuappdemo:1.0.0 harbor.paas.nl:10081/nlautotest_p-ipccc_production/yuappdemo:1.0.0
+  docker push harbor.paas.nl:10081/nlautotest_p-ipccc_production/yuappdemo:1.0.0
+  ```
+
+  
+
+
+
+
+
 ### 部署脚本
 
 需要修改的部分
