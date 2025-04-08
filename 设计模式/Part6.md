@@ -1284,7 +1284,7 @@ public abstract class AuthLink {
     protected Logger logger = LoggerFactory.getLogger(AuthLink.class);
     
     protected SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    protected String levelUserId;      //审核人ID
+    protected String levelUserId;     //审核人ID
     protected String levelUserName;   //审核人姓名
     protected AuthLink next;          //持有下一个处理类的引用
 
@@ -1356,11 +1356,9 @@ public class Level2AuthLink extends AuthLink {
         if (null == next) {
             return new AuthInfo("0000", "单号：", orderId, " 状态：二级审批完成", " 时间：", f.format(date), " 审批人：", levelUserName);
         }
-
         if (authDate.before(beginDate) || authDate.after(endDate) ) {
             return new AuthInfo("0000", "单号：", orderId, " 状态：二级审批完成", " 时间：", f.format(date), " 审批人：", levelUserName);
         }
-
         return next.doAuth(uId, orderId, authDate);
     }
 }
@@ -1382,7 +1380,6 @@ public class Level3AuthLink extends AuthLink {
         if (null == next) {
             return new AuthInfo("0000", "单号：", orderId, " 状态：三级审批完成", " 时间：", f.format(date), " 审批人：", levelUserName);
         }
-
         return next.doAuth(uId, orderId, authDate);
     }
 }
@@ -1396,14 +1393,12 @@ public class Client {
 
     @Test
     public void test_AuthLink() throws ParseException {
-
         AuthLink authLink = new Level3AuthLink("1000013", "王工")
-                .appendNext(new Level2AuthLink("1000012", "张经理")
-                        .appendNext(new Level1AuthLink("1000011", "段总")));
+            .appendNext(new Level2AuthLink("1000012", "张经理")
+            .appendNext(new Level1AuthLink("1000011", "段总")));
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date currentDate = f.parse("2020-11-18 23:49:46");
-
         logger.info("测试结果：{}", JSON.toJSONString(authLink.doAuth("研发牛马", "1000998004813441", currentDate)));
 
         // 模拟三级负责人审批

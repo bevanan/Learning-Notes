@@ -983,28 +983,23 @@ INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT
   最修改的话，就需要修改原harbor路径，做一个新的提交
 
   ```docker
-  docker pull 10.1.12.220/paas_public/kube-system/pause:3.7
-  
   docker login http://harbor.paas.nl:10081  -u admin -p Nlpaas123
-  docker pull harbor.paas.nl:10081/nlautotest_p-testip_production/yuappdemo:1.0.0
-  docker tag harbor.paas.nl:10081/nlautotest_p-testip_production/yuappdemo:1.0.0 harbor.paas.nl:10081/nlautotest_p-ipccc_production/yuappdemo:1.0.0
-  docker push harbor.paas.nl:10081/nlautotest_p-ipccc_production/yuappdemo:1.0.0
+  docker pull 10.1.12.220/paas_public/kube-system/pause:3.7
+  docker tag harbor.paas.nl:10081/paas_public/kube-system/pause:3.7 harbor.paas.nl:10081/paas_public/kube-system/pause-amd:3.7
+  docker push harbor.paas.nl:10081/paas_public/kube-system/pause-amd:3.7
   ```
-
   
+  重新部署，问题解决
+
+周二：
+
+- 执行主kube- master的main剧本时，遇到innerCommProt参数未找到情况，不解，明明在prepare里面已经赋值了。
 
 
 
 
 
-### 部署脚本
-
-需要修改的部分
-
-1. ClusterFile
-2. kubeadm
-3. kubelet
-4. 
+### 最新部分
 
 
 

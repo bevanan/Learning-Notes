@@ -16,52 +16,58 @@
 
 比如，如果一个集群有10TB的数据需要保留，而每个broker可以存储2TB，那么至少需要5个broker。如果启用了数据复制，则还需要一倍的空间，那么这个集群需要10个broker。
 
+
+
+
+
 ## Kafka集群搭建实战
 
-使用两台Linux服务器：一台192.68.10.7  一台192.168.10.8  （课程视频中IP地址可能会不同）
+使用两台Linux服务器：一台192.68.10.7  一台192.168.10.8
 
 192.68.10.7 的配置信息修改
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/156b6579a45f426294c034030e653b58.png) 
+![image.png](./4、Kafka集群与可靠性.assets/156b6579a45f426294c034030e653b58.png) 
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/74a5d5271b7f47d2a99e0988b09e1c80.png) 
+![image.png](./4、Kafka集群与可靠性.assets/74a5d5271b7f47d2a99e0988b09e1c80.png) 
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/9095c87e89034107a40326eb596bbf41.png) 
+![image.png](./4、Kafka集群与可靠性.assets/9095c87e89034107a40326eb596bbf41.png) 
 
 192.168.10.8的配置信息修改
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/71b91ac433864925aa4f9d886f12f708.png) 
+![image.png](./4、Kafka集群与可靠性.assets/71b91ac433864925aa4f9d886f12f708.png) 
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/cd990f2e9b874f01ade5c75c4ee646b2.png) 
+![image.png](./4、Kafka集群与可靠性.assets/cd990f2e9b874f01ade5c75c4ee646b2.png) 
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/d7052fc16a3d4347851f288e37baee16.png) 
+![image.png](./4、Kafka集群与可靠性.assets/d7052fc16a3d4347851f288e37baee16.png) 
 
 
 
 ## Kafka集群原理
 
-### **成员关系与控制器**
+### 一、**成员关系与控制器**
 
-控制器其实就是一个broker, 只不过它除了具有一般 broker的功能之外, 还负责分区首领的选举。
+控制器其实就是一个broker, 只不过它除了具有一般 broker的功能之外，还负责分区首领的选举。
 
-当控制器发现一个broker加入集群时, 它会使用 broker ID来检査新加入的 broker是否包含现有分区的副本。 如果有, 控制器就把变更通知发送给新加入的 broker和其他 broker, 新 broker上的副本开始从首领那里复制消息。
+当控制器发现一个broker加入集群时，它会使用 broker ID来检査新加入的 broker是否包含现有分区的副本。 如果有，控制器就把变更通知发送给新加入的 broker和其他 broker，新 broker上的副本开始从首领那里复制消息。
 
-简而言之, Kafka使用 Zookeeper的临时节点来选举控制器,并在节点加入集群或退出集群时通知控制器。 控制器负责在节点加入或离开集群时进行分区首领选举。
+简而言之，Kafka使用 Zookeeper的临时节点来选举控制器，并在节点加入集群或退出集群时通知控制器。 控制器负责在节点加入或离开集群时进行分区首领选举。
 
 从下面的两台启动日志中可以明显看出，192.168.10.7 这台服务器是控制器。
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/19b8a57332e04ee88e9149bfea2b52f4.png)
+![image.png](./4、Kafka集群与可靠性.assets/19b8a57332e04ee88e9149bfea2b52f4.png)
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/7040d717f3db4413ab7a7e94c86658cb.png)
+![image.png](./4、Kafka集群与可靠性.assets/7040d717f3db4413ab7a7e94c86658cb.png)
 
-### **集群工作机制**
 
-复制功能是 Kafka 架构的核心。在 Kafka 的文档里, Kafka 把自己描述成“一个分布式的、可分区的、可复制的提交日志服务”。
+
+### 二、**集群工作机制**
+
+复制功能是 Kafka 架构的核心。在 Kafka 的文档里，Kafka 把自己描述成“一个分布式的、可分区的、可复制的提交日志服务”。
 
 复制之所以这么关键, 是因为它可以在个别节点失效时仍能保证 Kafka 的可用性和持久性。
-Kafka 使用主题来组织数据, 每个主题被分为若干个分区,每个分区有多个副本。那些副本被保存在 broker 上, 每个 broker 可以保存成百上千个属于 不同主题和分区的副本。
+Kafka 使用主题来组织数据, 每个主题被分为若干个分区,每个分区有多个副本。那些副本被保存在 broker 上，每个 broker 可以保存成百上千个属于 不同主题和分区的副本。
 
-#### replication-factor参数
+#### 一、replication-factor参数
 
 比如我们创建一个lijin的主题，复制因子是2，分区数是2
 
@@ -71,7 +77,7 @@ Kafka 使用主题来组织数据, 每个主题被分为若干个分区,每个�
 
 replication-factor用来设置主题的副本数。每个主题可以有多个副本，副本位于集群中不同的 broker 上，也就是说副本的数量不能超过 broker 的数量。
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/e1a1e3b2bfc84f70bbd4ad019443e1cc.png)
+![image.png](./4、Kafka集群与可靠性.assets/e1a1e3b2bfc84f70bbd4ad019443e1cc.png)
 
 从这里可以看出，lijin分区有两个分区，partition0和partition1 ，其中
 
@@ -81,19 +87,17 @@ replication-factor用来设置主题的副本数。每个主题可以有多个�
 
 |                                                              | 确认这个配置是否是在borker里面创建多个对应的partition，还是有几台机子配数字几 |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/142a0a3fea0648ef9db60ce163894673.png) | <img src="/Users/zhengbufeng/Documents/学习笔记/Learning-Notes/kafka/4、Kafka集群与可靠性.assets/image-20241022125245317.png" alt="image-20241022125245317" style="zoom:50%;" /> |
+| ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/142a0a3fea0648ef9db60ce163894673.png) | <img src="./4、Kafka集群与可靠性.assets/image-20241022125245317.png" alt="image-20241022125245317" style="zoom:50%;" /> |
 
 
 
-知识点跟GPT聊聊确认
 
 
-
-#### ***首领副本***
+#### 二、首领副本
 
 每个分区都有一个首领副本。为了保证一致性，所有生产者请求和消费者请求都会经过这个副本 。
 
-#### ***跟随者副本***
+#### 三、跟随者副本
 
 首领以外的副本都是跟随者副本。跟随者副本不处理来自客户端的请求,它们唯一一的任务就是从首领那里复制消息, 保持与首领一致的状态 。 如果首领发生崩溃, 其中的一个跟随者会被提升为新首领 。
 
@@ -106,11 +110,15 @@ replication-factor用来设置主题的副本数。每个主题可以有多个�
 比如Leader A一直表现得很好，但若auto.leader.rebalance.enable=true，那么有可能一段时间后Leader A就要被强行卸任换成Leader B。
 你要知道换一次Leader 代价很高的，原本向A发送请求的所有客户端都要切换成向B发送请求，而且这种换Leader本质上没有任何性能收益，因此建议在生产环境中把这个参数设置成false。
 
-### 集群消息生产
+
+
+
+
+### 三、集群消息生产
 
 **复制系数、不完全的首领选举、最少同步副本**
 
-#### **可靠系统里的生产者**
+#### 一、**可靠系统里的生产者**
 
 发送确认机制
 
@@ -124,7 +132,7 @@ acks=all 意味着首领在返回确认或错误响应之前，会等待（min.i
 
 ##### ISR
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/5ded939eac6f4a54ab7cbe2f6c370e05.png)
+![image.png](./4、Kafka集群与可靠性.assets/5ded939eac6f4a54ab7cbe2f6c370e05.png)
 
 Kafka的数据复制是以Partition为单位的。而多个备份间的数据复制，通过Follower向Leader拉取数据完成。从一这点来讲，有点像Master-Slave方案。不同的是，Kafka既不是完全的同步复制，也不是完全的异步复制，而是基于ISR的动态复制方案。
 
@@ -138,7 +146,7 @@ ISR，也即In-Sync Replica。每个Partition的Leader都会维护这样一个�
 
 ##### 示例
 
-![](file:///C:\Users\Administrator\AppData\Local\Temp\ksohtml5580\wps1.jpg)![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/5983/1672019756062/4413573076b44b3fb500bc817bb68eba.png)
+![image.png](./4、Kafka集群与可靠性.assets/4413573076b44b3fb500bc817bb68eba.png)
 
 在第一步中，Leader A总共收到3条消息，但由于ISR中的Follower只同步了第1条消息（m1），故只有m1被Commit，也即只有m1可被Consumer消费。此时Follower B与Leader A的差距是1，而Follower C与Leader A的差距是2，虽然有消息的差距，但是满足同步副本的要求保留在ISR中。
 
