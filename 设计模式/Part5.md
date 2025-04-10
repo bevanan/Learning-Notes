@@ -429,8 +429,8 @@ public class UserLogProxy implements MethodInterceptor {
 
     /**
      * 实现回调方法
-     * @param o     代理对象
-     * @param method  目标对象中的方法的Method实例
+     * @param o         代理对象
+     * @param method    目标对象中的方法的Method实例
      * @param args      实际参数
      * @param methodProxy  代理对象中的方法的method实例
      * @return: java.lang.Object
@@ -1783,7 +1783,6 @@ public class Client {
         binDir.add(new File("test",20000));
 
         Directory tmpDir = new Directory("tmp");
-
         Directory usrDir = new Directory("usr");
         Directory mysqlDir = new Directory("mysql");
         mysqlDir.add(new File("my.cnf",30));
@@ -1877,7 +1876,7 @@ public class Client {
 
 ### 5.7.3 享元模式实现
 
-- 抽象享元类可以是一个接口也可以是一个抽象类,作为所有享元类的公共父类, 主要作用是提高系统的可扩展性.
+- 抽象享元类可以是一个接口也可以是一个抽象类，作为所有享元类的公共父类，主要作用是提高系统的可扩展性.
 
 ```java
 /**
@@ -1888,7 +1887,7 @@ public abstract class Flyweight {
 }
 ```
 
-- 具体享元类,具体享元类中要将内部状态和外部状态分开处理,内部状态作为具体享元类的成员变量,而外部状态通过注入的方式添加到具体享元类中.
+- 具体享元类，具体享元类中要将内部状态和外部状态分开处理，内部状态作为具体享元类的成员变量，而外部状态通过注入的方式添加到具体享元类中。
 
 ```java
 /**
@@ -1914,7 +1913,7 @@ public class ConcreteFlyweight extends Flyweight {
 }
 ```
 
-- 非共享享元类,不复用享元工厂内部状态,但是是抽象享元类的子类或实现类
+- 非共享享元类，不复用享元工厂内部状态，但是是抽象享元类的子类或实现类
 
 ```java
 /**
@@ -1934,7 +1933,7 @@ public class UnsharedConcreteFlyweight extends Flyweight {
 }
 ```
 
-- 享元工厂类, 管理一个享元对象类的缓存池。它会存储享元对象之间需要传递的共有状态，比如，按照大写英文字母来作为状态标识，这种只在享元对象之间传递的方式就叫内部状态。同时，它还提供了一个通用方法 getFlyweight()，主要通过内部状态标识来获取享元对象。
+- 享元工厂类，管理一个享元对象类的缓存池。它会存储享元对象之间需要传递的共有状态，比如，按照大写英文字母来作为状态标识，这种只在享元对象之间传递的方式就叫内部状态。同时，它还提供了一个通用方法 getFlyweight()，主要通过内部状态标识来获取享元对象。
 
 ```java
 /**
@@ -1972,7 +1971,7 @@ public class FlyweightFactory {
 
 ### 5.7.4 享元模式应用实例
 
-五子棋中有大量的黑子和白子,它们的形状大小都是一样的,只是出现的位置不同,所以一个棋子作为一个独立的对象存储在内存中,会导致大量的内存的浪费,我们使用享元模式来进行优化.
+五子棋中有大量的黑子和白子，它们的形状大小都是一样的,只是出现的位置不同，所以一个棋子作为一个独立的对象存储在内存中，会导致大量的内存的浪费，我们使用享元模式来进行优化
 
 <img src=".\img\103.jpg" alt="image-20220530160637842" style="zoom: 90%;" /> 
 
