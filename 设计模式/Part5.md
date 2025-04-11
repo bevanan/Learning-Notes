@@ -563,7 +563,7 @@ public class PayController {
      * @param channelType 	渠道类型 1 微信, 2 支付宝
      * @param modeType    	支付模式 1 密码, 2 人脸, 3 指纹
      */
-    public boolean doPay(String uId, String tradeId, BigDecimal amount,int channelType,int modeType){
+    public boolean doPay(String uId, String tradeId, BigDecimal amount，int channelType，int modeType){
         //微信支付
         if(1 == channelType){
             System.out.println("微信渠道支付划账开始......");
@@ -596,10 +596,10 @@ public class Test_Pay {
     public static void main(String[] args) {
         PayController payController = new PayController();
         System.out.println("测试: 微信支付、人脸支付方式");
-        payController.doPay("weixin_001","1000112333333",new BigDecimal(100),1,2);
+        payController.doPay("weixin_001","1000112333333",new BigDecimal(100),1，2);
 
         System.out.println("\n测试: 支付宝支付、指纹支付方式");
-        payController.doPay("hifubao_002","1000112334567",new BigDecimal(100),2,3);
+        payController.doPay("hifubao_002","1000112334567",new BigDecimal(100),2，3);
     }
 }
 ```
@@ -781,15 +781,15 @@ public void test02() {
 
 ### 5.3.1 装饰器模式介绍
 
-装饰模式(decorator pattern) 的原始定义是：动态的给一个对象添加一些额外的职责. 就扩展功能而言,装饰器模式提供了一种比使用子类更加灵活的替代方案.
+装饰模式(decorator pattern) 的原始定义是：动态的给一个对象添加一些额外的职责。就扩展功能而言，装饰器模式提供了一种比使用子类更加灵活的替代方案。
 
-> 假设现在有有一块蛋糕,如果只有涂上奶油那这个蛋糕就是普通的**奶油蛋糕**, 这时如果我们添加上一些蓝莓,那这个蛋糕就是**蓝莓蛋糕**.如果我们再拿一块黑巧克力 然后写上姓名、插上代表年龄的蜡烛, 这就是变成了一块生日蛋糕 
+> 假设现在有有一块蛋糕，如果只有涂上奶油那这个蛋糕就是普通的**奶油蛋糕**，这时如果我们添加上一些蓝莓，那这个蛋糕就是**蓝莓蛋糕**。如果我们再拿一块黑巧克力 然后写上姓名、插上代表年龄的蜡烛，这就是变成了一块生日蛋糕 
 
 <img src=".\img\81.jpg" alt="image-20220530160637842" style="zoom: 50%;" />
 
 
 
-在软件设计中,装饰器模式是一种用于**替代继承**的技术,它通过一种无须定义子类的方式给对象动态的增加职责,使用对象之间的关联关系取代类之间的继承关系.
+在软件设计中,装饰器模式是一种用于**替代继承**的技术，它通过一种无须定义子类的方式给对象动态的增加职责，使用对象之间的关联关系取代类之间的继承关系。
 
 装饰器的核心思想是“**动态扩展功能**”，不直接修改原始类的代码，而是通过组合和封装的方式，在运行时为对象添加新的行为或职责。
 
@@ -885,13 +885,13 @@ public class ConcreteDecorator extends Decorator {
 导入IO工具类
 
 ```xml
-    <dependencies>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
-        </dependency>
-    </dependencies>
+<dependencies>
+    <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.6</version>
+    </dependency>
+</dependencies>
 ```
 
 1 ) DataLoader
@@ -1019,7 +1019,7 @@ public class EncryptionDataDecorator extends DataLoaderDecorator {
 ```java
 public class TestDecorator {
     public static void main(String[] args) {
-        String info = "name:tom,age:15";
+        String info = "name:tom，age:15";
         DataLoaderDecorator decorator = new EncryptionDataDecorator(new BaseFileDataLoader("demo.txt"));
         decorator.write(info);
 
@@ -1943,7 +1943,7 @@ public class UnsharedConcreteFlyweight extends Flyweight {
  **/
 public class FlyweightFactory {
     //定义一个HashMap用于存储享元对象,实现享元池
-    private Map<String,Flyweight> pool = new HashMap();
+    private Map<String，Flyweight> pool = new HashMap();
     
     public FlyweightFactory() {
         //添加对应的内部状态
@@ -1962,7 +1962,7 @@ public class FlyweightFactory {
             //如果对象不存在,先创建一个新的对象添加到享元池中,然后返回
             System.out.println("===享元池中不存在,创建并复用,key:" + key);
             Flyweight fw = new ConcreteFlyweight(key);
-            pool.put(key,fw);
+            pool.put(key，fw);
             return fw;
         }
     }
@@ -2017,11 +2017,11 @@ public class BlackGobang extends GobangFlyweight {
  **/
 public class GobangFactory {
     private static GobangFactory factory = new GobangFactory();
-    private static Map<String,GobangFlyweight> pool;
+    private static Map<String，GobangFlyweight> pool;
 
     //设置共享对象的内部状态,在享元对象中传递
     private GobangFactory() {
-        pool = new HashMap<String,GobangFlyweight>();
+        pool = new HashMap<String，GobangFlyweight>();
         GobangFlyweight black = new BlackGobang(); //黑子
         GobangFlyweight white = new WhiteGobang(); //白子
         pool.put("b",black);
