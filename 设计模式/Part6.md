@@ -192,7 +192,7 @@ public class LotteryServiceImpl implements LotteryService {
         //发送MQ消息
         System.out.println("记录用户摇号结果(MQ), 用户ID:" +  uId + ",摇号结果:" + result);
 
-       	return new LotteryResult(uId,result,new Date());
+       	return new LotteryResult(uId，result，new Date());
     }
 }
 
@@ -260,7 +260,7 @@ public class EventManager {
 
     public EventManager(Enum<EventType>... operations) {
         for (Enum<EventType> operation : operations) {
-            this.listeners.put(operation,new ArrayList<>());
+            this.listeners.put(operation，new ArrayList<>());
         }
     }
 
@@ -279,7 +279,7 @@ public class EventManager {
      * @param eventType 事件类型
      * @param listener  监听
      */
-    public void unsubscribe(Enum<EventType> eventType,EventListener listener){
+    public void unsubscribe(Enum<EventType> eventType，EventListener listener){
         List<EventListener> users = listeners.get(eventType);
         users.remove(listener);
     }
@@ -311,15 +311,15 @@ public abstract class LotteryService{
         //设置事件类型
         eventManager = new EventManager(EventManager.EventType.MQ, EventManager.EventType.Message);
         //订阅
-        eventManager.subscribe(EventManager.EventType.Message,new MessageEventListener());
-        eventManager.subscribe(EventManager.EventType.MQ,new MQEventListener());
+        eventManager.subscribe(EventManager.EventType.Message，new MessageEventListener());
+        eventManager.subscribe(EventManager.EventType.MQ，new MQEventListener());
     }
 
     public LotteryResult lotteryAndMsg(String uId){
         LotteryResult result = lottery(uId);
         //发送通知
-        eventManager.notify(EventManager.EventType.Message,result);
-        eventManager.notify(EventManager.EventType.MQ,result);
+        eventManager.notify(EventManager.EventType.Message，result);
+        eventManager.notify(EventManager.EventType.MQ，result);
 
         return result;
     }
@@ -338,7 +338,7 @@ public class LotteryServiceImpl extends LotteryService {
     public LotteryResult lottery(String uId) {
         //摇号
         String result = houseService.lots(uId);
-        return new LotteryResult(uId,result,new Date());
+        return new LotteryResult(uId，result，new Date());
     }
 }
 ```
@@ -638,7 +638,7 @@ P2P公司的借款系统中有一个利息计算模块,利息的计算流程是�
  **/
 public abstract class Account {
     //step1 具体方法-验证用户信息是否正确
-    public boolean validate(String account,String password){
+    public boolean validate(String account，String password){
         System.out.println("账号: " + account + ",密码: " + password);
         if(account.equalsIgnoreCase("tom") &&
         password.equalsIgnoreCase("123456")){
@@ -657,8 +657,8 @@ public abstract class Account {
     }
 
     //模板方法
-    public void handle(String account,String password){
-        if(!validate(account,password)){
+    public void handle(String account，String password){
+        if(!validate(account，password)){
             System.out.println("账户或密码错误!!");
             return;
         }
@@ -959,7 +959,7 @@ public class ReceiptHandleStrategyFactory {
     }
 
     //使用Map集合存储策略信息,彻底消除if...else
-    private static Map<String,ReceiptHandleStrategy> strategyMap;
+    private static Map<String，ReceiptHandleStrategy> strategyMap;
 
     //初始化具体策略,保存到map集合
     public static void init(){
@@ -1194,7 +1194,7 @@ public class AuthController {
         //二级审批
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 时间格式化
         //二级审核人主要审核双十一之前, 11-01 ~ 11-10号的请求,所以要对传入的审核时间进行判断
-        //审核时间 大于 2022-11-01 并且  小于 2022-11-10,Date1.after(Date2),当Date1大于Date2时，返回TRUE,Date1.before(Date2)，当Date1小于Date2时，返回TRUE
+        //审核时间 大于 2022-11-01 并且  小于 2022-11-10，Date1.after(Date2),当Date1大于Date2时，返回TRUE，Date1.before(Date2)，当Date1小于Date2时，返回TRUE
         if(authDate.after(f.parse("2022-11-01 00:00:00")) && authDate.before(f.parse("2022-11-10 00:00:00"))){
             //条件成立,查询二级审核的审核信息
             date = AuthService.queryAuthInfo("1000012",orderId);
@@ -1466,15 +1466,15 @@ public class Client {
 
 ### 6.5.1 状态模式介绍
 
-自然界很多事物都有多种状态,而且不同状态下会具有不同的行为,这些状态在特定条件下还会发生相互转换,比如水
+自然界很多事物都有多种状态，而且不同状态下会具有不同的行为，这些状态在特定条件下还会发生相互转换，比如水
 
 ​								<img src=".\img\117.jpg" alt="image-20220530160637842" style="zoom: 100%;" /> 
 
-在软件系统中,有些对象也像水一样具有多种状态,这些状态在某些情况下能够相互转换,而且对象在不同状态下也将具有不同的行为.
+在软件系统中，有些对象也像水一样具有多种状态，这些状态在某些情况下能够相互转换，而且对象在不同状态下也将具有不同的行为。
 
-**状态模式(state pattern)的定义:  允许一个对象在其内部状态改变时改变它的行为. 对象看起来似乎修改了它的类.**
+**状态模式(state pattern)的定义:  允许一个对象在其内部状态改变时改变它的行为。对象看起来似乎修改了它的类.**
 
-**状态模式**就是用于解决系统中复杂对象的状态转换以及不同状态下行为的封装问题. 状态模式将一个对象的状态从该对象中分离出来,封装到专门的状态类中(用类来表示状态) ,使得对象状态可以灵活变化.
+**状态模式**就是用于解决系统中复杂对象的状态转换以及不同状态下行为的封装问题。状态模式将一个对象的状态从该对象中分离出来，封装到专门的状态类中(用类来表示状态)，使得对象状态可以灵活变化。
 
 ### 6.5.2 状态模式结构
 
@@ -1496,37 +1496,20 @@ public class Client {
 
 ```java
 /**
+ * 上下文类
+ **/
+public class Context {
+    private State currentState; //维持一个对状态对象的引用
+    
+	// Constructor getter setter toString
+}
+
+/**
  * 抽象状态接口
  **/
 public interface State {
     //声明抽象方法,不同具体状态类可以有不同实现
     void handle(Context context);
-}
-
-/**
- * 上下文类
- **/
-public class Context {
-    private State currentState; //维持一个对状态对象的引用
-
-    public Context() {
-        this.currentState = null;
-    }
-
-    public State getCurrentState() {
-        return currentState;
-    }
-
-    public void setCurrentState(State currentState) {
-        this.currentState = currentState;
-    }
-
-    @Override
-    public String toString() {
-        return "Context{" +
-                "currentState=" + currentState +
-                '}';
-    }
 }
 
 public class ConcreteStateA implements State {
@@ -1574,9 +1557,9 @@ public class Client {
 
 ### 6.5.4 状态模式应用实例
 
-模拟交通信号灯的状态转换. 交通信号灯一般包括了红、黄、绿3种颜色状态,不同状态之间的切换逻辑为: 红灯只能切换为黄灯,黄灯可以切换为绿灯或红灯,绿灯只能切换为黄灯.
+模拟交通信号灯的状态转换。交通信号灯一般包括了红、黄、绿3种颜色状态，不同状态之间的切换逻辑为：红灯只能切换为黄灯，黄灯可以切换为绿灯或红灯，绿灯只能切换为黄灯。
 
-​                                                              <img src=".\img\119.jpg" alt="image-20220530160637842" style="zoom: 50%;" /> 
+   <img src=".\img\119.jpg" alt="image-20220530160637842" style="zoom: 50%;" /> 
 
 **1) 不使用设计模式** 
 
@@ -1624,14 +1607,15 @@ public class TrafficLight {
 }
 ```
 
-问题: 状态切换的操作全部在一个类中,如果有很多的交通灯进行联动,这个程序的逻辑就会变得非常复杂,难以维护.
+问题：状态切换的操作全部在一个类中，如果有很多的交通灯进行联动，这个程序的逻辑就会变得非常复杂，难以维护。
 
-**2) 使用状态模式,将交通灯的切换逻辑组织起来,把跟状态有关的内容从交通灯类里抽离出来,使用类来表示不同的状态.**
+
+
+**2) 使用状态模式，将交通灯的切换逻辑组织起来，把跟状态有关的内容从交通灯类里抽离出来，使用类来表示不同的状态。**
 
 ```java
 /**
- * 交通灯类
- *    红灯(禁行) ,黄灯(警示),绿灯(通行) 三种状态.
+ * 交通灯类 红灯(禁行) ,黄灯(警示),绿灯(通行) 三种状态.
  **/
 public class TrafficLight {
     //初始状态红灯
@@ -1678,6 +1662,7 @@ public class Red implements State {
     @Override
     public void switchToYellow(TrafficLight trafficLight) {
         System.out.println("黄灯亮起...时长:10秒!");
+        trafficLight.setState(new Yellow());
     }
 
     @Override
@@ -1736,7 +1721,7 @@ public class Client {
 }
 ```
 
-通过代码重构,将"状态" 接口化、模块化,最终将它们从臃肿的交通类中抽了出来, 消除了原来TrafficLight类中的if...else,代码看起来干净而优雅.
+通过代码重构，将"状态" 接口化、模块化，最终将它们从臃肿的交通类中抽了出来，消除了原来 TrafficLight 类中的 if...else，代码看起来干净而优雅。
 
 ### 6.5.5 状态模式总结
 
@@ -1769,7 +1754,7 @@ public class Client {
 
 <img src=".\img\120.jpg" alt="image-20220530160637842" style="zoom: 50%;" /> 
 
-在软件系统中,容器对象拥有两个职责: 一是存储数据,而是遍历数据.从依赖性上看,前者是聚合对象的基本职责.而后者是可变化的,又是可分离的.因此可以将遍历数据的行为从容器中抽取出来,封装到迭代器对象中,由迭代器来提供遍历数据的行为,这将简化聚合对象的设计,更加符合单一职责原则
+在软件系统中，容器对象拥有两个职责：一是存储数据,而是遍历数据。从依赖性上看，前者是聚合对象的基本职责。而后者是可变化的，又是可分离的。因此可以将遍历数据的行为从容器中抽取出来，封装到迭代器对象中，由迭代器来提供遍历数据的行为，这将简化聚合对象的设计，更加符合单一职责原则
 
 ### 6.6.2 迭代器模式原理
 
@@ -1870,8 +1855,8 @@ public class Test01 {
  * 抽象迭代器 IteratorIterator
  **/
 public interface IteratorIterator<E> {
-    void reset();   //重置为第一个元素
-    E next();   //获取下一个元素
+    void reset();   	//重置为第一个元素
+    E next();   		//获取下一个元素
     E currentItem();    //检索当前元素
     boolean hasNext();  //判断是否还有下一个元素存在
 }
@@ -1893,14 +1878,7 @@ public class Topic {
     public Topic(String name) {
         this.name = name;
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+	// getter setter
 }
 
 /**
@@ -1999,6 +1977,10 @@ public class Client {
 * 当需要为遍历不同的集合结构提供一个统一的接口时或者当访问一个集合对象的内容而无须暴露其内部细节的表示时。
 
   > 迭代器模式把对不同集合类的访问逻辑抽象出来，这样在不用暴露集合内部结构的情况下，可以隐藏不同集合遍历需要使用的算法，同时还能够对外提供更为简便的访问算法接口。
+
+
+
+
 
 ## 6.7 访问者模式
 
@@ -2189,7 +2171,7 @@ public class DiscountVisitor implements Visitor {
     public static void main(String[] args) {
         LocalDate billDate = LocalDate.now();
 
-        Candy candy = new Candy("徐福记",LocalDate.of(2022,10,1),10.0);
+        Candy candy = new Candy("徐福记",LocalDate.of(2022，10，1),10.0);
         System.out.println("糖果: " + candy.getName());
 
         double rate = 0.0;
@@ -2214,9 +2196,9 @@ public class DiscountVisitor implements Visitor {
 public class Client {
     public static void main(String[] args) {
         //德芙巧克力,生产日期2002-5-1 ,原价 10元
-        Candy candy = new Candy("德芙巧克力",LocalDate.of(2022,5,1),10.0);
+        Candy candy = new Candy("德芙巧克力",LocalDate.of(2022，5，1),10.0);
 
-        Visitor visitor = new DiscountVisitor(LocalDate.of(2022,10,11));
+        Visitor visitor = new DiscountVisitor(LocalDate.of(2022，10，11));
         visitor.visit(candy);
     }
 }
@@ -2260,19 +2242,19 @@ public class Client {
     public static void main(String[] args) {
 
 //        //德芙巧克力,生产日期2002-5-1 ,原价 10元
-////        Candy candy = new Candy("德芙巧克力",LocalDate.of(2022,5,1),10.0);
+////        Candy candy = new Candy("德芙巧克力",LocalDate.of(2022，5，1),10.0);
 ////
-////        Visitor visitor = new DiscountVisitor(LocalDate.of(2022,10,11));
+////        Visitor visitor = new DiscountVisitor(LocalDate.of(2022，10，11));
 ////        visitor.visit(candy);
 
         //模拟添加多个商品的操作
         List<Acceptable> products = Arrays.asList(
-                new Candy("金丝猴奶糖",LocalDate.of(2022,6,10),10.00),
-                new Wine("衡水老白干",LocalDate.of(2020,6,10),100.00),
-                new Fruit("草莓",LocalDate.of(2022,10,12),50.00,1)
+                new Candy("金丝猴奶糖",LocalDate.of(2022，6，10),10.00),
+                new Wine("衡水老白干",LocalDate.of(2020，6，10),100.00),
+                new Fruit("草莓",LocalDate.of(2022，10，12),50.00，1)
         );
 
-        Visitor visitor = new DiscountVisitor(LocalDate.of(2022,10,17));
+        Visitor visitor = new DiscountVisitor(LocalDate.of(2022，10，17));
         for (Acceptable product : products) {
             product.accept(visitor);
         }
@@ -2356,7 +2338,7 @@ public class Originator {
 
     //创建备忘录对象
     public Memento create(){
-        return new Memento(id,name,phone);
+        return new Memento(id，name，phone);
     }
 
     //恢复对象状态
@@ -2684,7 +2666,7 @@ public class MainApp {
 public class Order {
     private int diningTable;  //餐桌号码
     //存储菜名与份数
-    private Map<String,Integer> foodMenu = new HashMap<>();
+    private Map<String，Integer> foodMenu = new HashMap<>();
 
     public int getDiningTable() {
         return diningTable;
@@ -2707,7 +2689,7 @@ public class Order {
  * 厨师类 -> Receiver角色
  **/
 public class Chef {
-    public void makeFood(int num,String foodName){
+    public void makeFood(int num，String foodName){
         System.out.println(num + "份," + foodName);
     }
 }
@@ -2796,8 +2778,8 @@ public class Client {
         Chef receiver = new Chef();
 
         //将订单和接收者封装成命令对象
-        OrderCommand cmd1 = new OrderCommand(receiver,order1);
-        OrderCommand cmd2 = new OrderCommand(receiver,order2);
+        OrderCommand cmd1 = new OrderCommand(receiver，order1);
+        OrderCommand cmd2 = new OrderCommand(receiver，order2);
 
         //创建调用者
         Waiter invoke = new Waiter();
@@ -2848,7 +2830,7 @@ public static int add(int a , int  b){
 }
 
 //用于三个整数相加的方法
-public static int add(int a , int  b,int c){
+public static int add(int a , int  b，int c){
     return a + b + c;
 }
 
@@ -2981,7 +2963,7 @@ public class ExpressionInterpreter {
 
 **代码重构**
 
-上面代码的所有的解析逻辑都耦合在一个函数中，这样显然是不合适的。这 个时候，我们就要考虑拆分代码，将解析逻辑拆分到独立的小类中, 前面定义的语法规则有两类表达式，一类是数字，一类是运算符，运算符又包括加减乘除。 利用解释器模式，我们把解析的工作拆分到以下五个类:plu,sub,mul,div
+上面代码的所有的解析逻辑都耦合在一个函数中，这样显然是不合适的。这 个时候，我们就要考虑拆分代码，将解析逻辑拆分到独立的小类中, 前面定义的语法规则有两类表达式，一类是数字，一类是运算符，运算符又包括加减乘除。 利用解释器模式，我们把解析的工作拆分到以下五个类:plu，sub，mul，div
 
 - NumExpression
 - PluExpression
@@ -3254,7 +3236,7 @@ public class Client {
  **/
 public abstract class Mediator {
     //申明一个联络方法
-    public abstract void contact(String message,Person person);
+    public abstract void contact(String message，Person person);
 }
 
 /**
@@ -3314,7 +3296,7 @@ public class HouseOwner extends Person{
 
     //与中介者联系
     public void contact(String message){
-        mediator.contact(message,this);
+        mediator.contact(message，this);
     }
 
     //获取信息
@@ -3333,7 +3315,7 @@ public class Tenant extends Person{
 
     //与中介者联系
     public void contact(String message){
-        mediator.contact(message,this);
+        mediator.contact(message，this);
     }
 
     //获取信息

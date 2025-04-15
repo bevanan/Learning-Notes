@@ -995,7 +995,11 @@ INSERT INTO EE_EXEC_SCRIPT(EXEC_SCRIPT_ID, EXEC_SCRIPT_NAME, SCRIPT_FILE, SCRIPT
 
 - 执行主kube- master的main剧本时，遇到innerCommProt参数未找到情况，不解，明明在prepare里面已经赋值了。
 
+周三：遇错执行不完全问题
 
+周四：node节点 NotReady状态，过不了
+
+周五：
 
 
 

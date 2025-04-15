@@ -201,8 +201,8 @@ public class KafkaConConsumer {
 
 Leader消费者的选举
 
-- **触发条件**：当消费者组**首次启动**或**发生重平衡**时，所有消费者会向协调器发送`JoinGroup`请求。
-- **选举规则**：
+- 触发条件：当消费者组**首次启动**或**发生重平衡**时，所有消费者会向协调器发送`JoinGroup`请求。
+- 选举规则：
   - 协调器从当前加入的消费者中选择一个作为**Leader消费者**，通常选择**第一个成功发送`JoinGroup`请求的消费者**（但严格来说，协调器可能根据内部逻辑选择，例如消费者ID的字典序）。
   - Leader的选举**与分区分配策略无关**，仅用于组织本次重平衡的分区分配流程。
 
@@ -430,6 +430,8 @@ Math.abs(groupID.hashCode()) % numPartitions，
 __consumer_offsets 的每条消息格式大致如图所示
 
 可以想象成一个 KV 格式的消息，key 就是一个三元组：`group.id+topic+分区号`，而 value 就是 offset 的值
+
+
 
 # 三、分区再均衡
 

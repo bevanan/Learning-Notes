@@ -8,13 +8,13 @@
 
 > redo log可以在本地磁盘中直接看到
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/86ec94f7520548d082e36e9731a181b7.png)
+> ![image.png](./MySQL-3.assets/86ec94f7520548d082e36e9731a181b7.png)
 >
 > 通过这个文件，可以看到，redo log是一个文件组的形式存在的，5.7里默认是2个文件，可以配置为多个文件。每个文件的大小是一样的。
 >
 > 默认情况下，可以看到，我现在环境里的redo log都存满了，默认大小是48M。
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/9e31668d01074611b669810467be8dc0.png)
+> ![image.png](./MySQL-3.assets/9e31668d01074611b669810467be8dc0.png)
 >
 > 其实在写入数据到redo log文件中时，为了提升他的写入性能，他的特点是 **顺序写** 的操作。
 >
@@ -25,7 +25,7 @@
 >
 > 比如，模拟两个文件组的形式。
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/dc2830e6bd4e4ebeb7687ff4b6882858.png)
+> ![image.png](./MySQL-3.assets/dc2830e6bd4e4ebeb7687ff4b6882858.png)
 
 ### 1.2 数据为何不直接落到具体的表中，而是优先写入到redo log
 
@@ -43,7 +43,7 @@
 >
 > 可以在MySQL官方文档里看到全程Binary Log
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/3517119e315b42cabcf59d629b2ef5f1.png)
+> ![image.png](./MySQL-3.assets/3517119e315b42cabcf59d629b2ef5f1.png)
 >
 > bin log是逻辑日志，记录的内容是你执行的一个语句的原始逻辑，类似给 **ID = 1这一行的 age字段 加1。**
 >
@@ -53,7 +53,7 @@
 
 > 通过官方文档可以看到，bin log提供了三种格式来存储信息。 通过 binlog_format指定存储的形式
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/535892015f834e299714aa6471e5a090.png)
+> ![image.png](./MySQL-3.assets/535892015f834e299714aa6471e5a090.png)
 >
 > **statement：** 如果指定statement记录，会记录的内容是 **SQL语句的原文** ，比如你在修改语句中涉及到了一些函数，比如 **now()**，在恢复数据时，如果是基于statement形式存储的bin log恢复的话，可能会造成重新执行 **now()** 函数，会斗导致时间会更新为当前系统时间，和原数据的时间 **不一致** 。
 >
@@ -71,17 +71,17 @@
 >
 > 不用怕，如果查过了binlog_cache_size的空间，他会自动再次扩容内存，但是会有一个限制，不能超过max_binlog_cache_size这个参数的值，但是这个参数的值，贼大，基本不用考虑长事务或者数据量大的操作导致binlog_cache_size爆炸的问题………… 当然，咱们也要尽可能的规避这种长事务的情况……
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/cfdafdc7bb9f452cb976b8d154d66c1f.png)
+> ![image.png](./MySQL-3.assets/cfdafdc7bb9f452cb976b8d154d66c1f.png)
 
 ---
 
 > 关于binlog cache的整体写入文件系统的流程：
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/59e948728f5e4cf0ba83f1b5453f7b28.png)
+> ![image.png](./MySQL-3.assets/59e948728f5e4cf0ba83f1b5453f7b28.png)
 >
 > 关于binlog cache中的数据什么时候写入到磁盘，是根据配置决定的：
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/1b6766e9a6814b29b7d2547eb3ca0fac.png)
+> ![image.png](./MySQL-3.assets/1b6766e9a6814b29b7d2547eb3ca0fac.png)
 >
 > 整个同步的配置默认值是1，在官方也看到可以设置为0
 >
@@ -105,7 +105,7 @@
 >
 > 在执行更新操作时，并且有事务操作时，会记录redo log和bin log两个文件，redo log在事务的执行过程中就会 **不断的写入** 。而bin log只有 **提交事务的时候写入** ，才会执行write操作以及fsync的操作落到磁盘中。
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/7420215be45944bcb28e055b41e3c988.png)
+> ![image.png](./MySQL-3.assets/7420215be45944bcb28e055b41e3c988.png)
 >
 > 如果redo log和bin log在记录日志时，他们之间的数据不一致，会出现问题？
 >
@@ -119,13 +119,13 @@
 >
 > 但是因为事务没正常提交，发生了异常，数据没有落到bin log中，bin log还是之前的 **age = 18** 。
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/00e5ad1b3aaf447d9a6086b652ab0b27.png)
+> ![image.png](./MySQL-3.assets/00e5ad1b3aaf447d9a6086b652ab0b27.png)
 >
 > 之后，MySQL崩溃了。此时重启MySQL需要恢复数据。
 >
 > 此时主库和从库可能就会出现数据不一致的问题。
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/67cc2e46bd8646cd82bd1a7f29e7fad5.png)
+> <img src="./MySQL-3.assets/67cc2e46bd8646cd82bd1a7f29e7fad5.png" alt="image.png" style="zoom:67%;" />
 >
 > 此时就需要2PC来帮助咱们解决这个问题。。。
 
@@ -135,19 +135,23 @@
 >
 > 事务还未提交时，redo log中的数据是prepare阶段，而当你真正的提交了事务之后数据才是commit阶段。
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/d8130191193347e7818c83961649ef99.png)
+> <img src="./MySQL-3.assets/d8130191193347e7818c83961649ef99.png" alt="image.png" style="zoom:67%;" />
 >
 > 在知道两阶段提交的效果之后，写入bin log时发生异常也不会与影响。
 >
 > 因为MySQL根据redo log日志恢复时，查看一下redo log中的提交状态， **如果是prepare阶段，并且在bin log中没有对应内容** ，这个数据会被回滚。
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/402dc28057ab4b7298b941ab9763b887.png)下一个例子，如果现在redo log在设置日志状态为commit时，出现了异常，但是bin log正常的写入到了系统文件中。
+> <img src="./MySQL-3.assets/402dc28057ab4b7298b941ab9763b887.png" alt="image.png" style="zoom:67%;" />
+>
+> 下一个例子，如果现在redo log在设置日志状态为commit时，出现了异常，但是bin log正常的写入到了系统文件中。
 >
 > 现在出现了这个情况，redo log存储了age = 38，但是是prepare阶段。 bin log中存储了age = 38。
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/47010790ef75401ba7744d38c0288b3a.png)这种情况，就是发现age = 38再redo log是prepare阶段，但是发现bin log中有完整的数据，那么此时这个数据不会回滚，会按照bin log的数据同步。
+> <img src="./MySQL-3.assets/47010790ef75401ba7744d38c0288b3a.png" alt="image.png" style="zoom:67%;" />
 >
-> ![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/2746/1725621924011/56d192fe2d4c42eea3edbd552072cb35.png)
+> 这种情况，就是发现age = 38再redo log是prepare阶段，但是发现bin log中有完整的数据，那么此时这个数据不会回滚，会按照bin log的数据同步。
+>
+> <img src="./MySQL-3.assets/56d192fe2d4c42eea3edbd552072cb35.png" alt="image.png" style="zoom:67%;" />
 >
 > **在恢复数据时，以bin log为主。**
 
