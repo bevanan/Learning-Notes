@@ -1662,7 +1662,7 @@ public class Red implements State {
     @Override
     public void switchToYellow(TrafficLight trafficLight) {
         System.out.println("黄灯亮起...时长:10秒!");
-        trafficLight.setState(new Yellow());
+        trafficLight.setState(new Yellow()); // 想法没错，这句漏了，所有的都是
     }
 
     @Override
@@ -1722,6 +1722,88 @@ public class Client {
 ```
 
 通过代码重构，将"状态" 接口化、模块化，最终将它们从臃肿的交通类中抽了出来，消除了原来 TrafficLight 类中的 if...else，代码看起来干净而优雅。
+
+**DS精准版**
+
+```java
+// 状态接口
+interface TrafficLightState {
+    void handle(TrafficLight context);
+    void enter();
+}
+
+// 红灯状态
+class RedState implements TrafficLightState {
+    @Override
+    public void handle(TrafficLight context) {
+        context.setState(new GreenState());
+    }
+
+    @Override
+    public void enter() {
+        System.out.println("红灯亮，禁止通行");
+    }
+}
+
+// 绿灯状态
+class GreenState implements TrafficLightState {
+    @Override
+    public void handle(TrafficLight context) {
+        context.setState(new YellowState());
+    }
+
+    @Override
+    public void enter() {
+        System.out.println("绿灯亮，可以通行");
+    }
+}
+
+// 黄灯状态
+class YellowState implements TrafficLightState {
+    @Override
+    public void handle(TrafficLight context) {
+        context.setState(new RedState());
+    }
+
+    @Override
+    public void enter() {
+        System.out.println("黄灯亮，请注意");
+    }
+}
+
+// 红绿灯上下文
+class TrafficLight {
+    private TrafficLightState currentState;
+
+    public TrafficLight() {
+        this.currentState = new RedState();
+        currentState.enter(); // 初始化状态
+    }
+
+    public void setState(TrafficLightState newState) {
+        this.currentState = newState;
+        newState.enter();
+    }
+
+    public void change() {
+        currentState.handle(this);
+    }
+}
+
+// 测试类
+public class Main {
+    public static void main(String[] args) {
+        TrafficLight light = new TrafficLight();
+        
+        light.change(); // 切换到绿灯
+        light.change(); // 切换到黄灯
+        light.change(); // 切换回红灯
+        light.change(); // 再次切换到绿灯
+    }
+}
+```
+
+
 
 ### 6.5.5 状态模式总结
 
