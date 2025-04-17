@@ -14,11 +14,11 @@ Kafka是一款消息中间件，消息中间件本质就是收消息与发消息
 我们这里使用Kafka内置的客户端API开发kafka应用程序。因为我们是Java程序员，所以这里我们使用Maven，使用较新的版本
 
 ```xml
-  <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka-clients</artifactId>
-        <version>3.3.1</version>
-  </dependency>
+<dependency>
+   <groupId>org.apache.kafka</groupId>
+   <artifactId>kafka-clients</artifactId>
+   <version>3.3.1</version>
+</dependency>
 ```
 
 ### 一、生产者
@@ -246,8 +246,6 @@ group.id （**ConsumerConfig.GROUP_ID_CONFIG**） 并非完全必需。
 对应代码：
 
 ```java
-package com.msb;
-
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -362,8 +360,6 @@ Kafka里消费者从属于消费者群组，一个群组里的消费者订阅的
 代码中使用到了自定义序列化。
 
 ```java
-package com.msb.selfserial;
-
 /**
  * 类说明：实体类
  */
@@ -380,7 +376,6 @@ public class User {
 id的长度4个字节，字符串的长度描述4个字节， 字符串本身的长度nameSize个字节
 
 ```java
-package com.msb.selfserial;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Serializer;
 import java.nio.ByteBuffer;
@@ -430,7 +425,6 @@ public class UserSerializer implements Serializer<User> {
 返序列化
 
 ```java
-package com.msb.selfserial;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
 import java.nio.ByteBuffer;
@@ -763,6 +757,14 @@ public class SelfPartitioner implements Partitioner {
   - 在生产者端，启用幂等性生产模式，通过 acks=all 和 enable.idempotence=true 配置来确保消息的唯一性。
 
   - 在消费者端，使用事务模式，通过设置 isolation.level=read_committed 来确保消息处理的幂等性。
+  
+    事务（Transactions）
+  
+    - 作用：将生产消息和消费消息的操作绑定为一个原子操作。
+    - 场景：适用于需要读写跨多个 Topic/Partition 的原子性操作。
+    - 配置：
+      - 生产者：设置 `transactional.id`，并调用 `beginTransaction()`, `commitTransaction()`。
+      - 消费者：设置 `isolation.level=read_committed`，只读取已提交的事务消息。
 
 #### 1.1 消费者的配置参数
 

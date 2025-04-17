@@ -1596,7 +1596,31 @@ public class RabbitMQClient {
    }
    ```
 
-2. 创建出来的cilent对象无法修改参数，没办法访问到内部的参数。因为外部类与内部类是隔离的，除内部类有对内的getter。
+2. 创建出来的cilent对象无法修改参数，没办法访问到内部的参数。因为外部类与内部类是隔离的。如果还想对其访问，用这个方式：
+
+   ```java
+   public class ForTestBuilder {
+       private final String username;
+       private final String paassword;
+       private final Integer age;
+   
+       // 静态内部类在最后build的时候，对外部赋值
+       private ForTestBuilder(Builder builder) {
+           this.username = builder.username;
+           this.paassword = builder.password;
+           this.age = builder.age;
+       }
+       
+       // 然后也只能创建 getter
+       public String getUsername() {
+           return username;
+       }
+       ...
+   ```
+
+   
+
+
 
 测试
 

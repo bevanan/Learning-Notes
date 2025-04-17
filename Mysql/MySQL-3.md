@@ -71,17 +71,17 @@
 >
 > 不用怕，如果查过了binlog_cache_size的空间，他会自动再次扩容内存，但是会有一个限制，不能超过max_binlog_cache_size这个参数的值，但是这个参数的值，贼大，基本不用考虑长事务或者数据量大的操作导致binlog_cache_size爆炸的问题………… 当然，咱们也要尽可能的规避这种长事务的情况……
 >
-> ![image.png](./MySQL-3.assets/cfdafdc7bb9f452cb976b8d154d66c1f.png)
+> <img src="./MySQL-3.assets/cfdafdc7bb9f452cb976b8d154d66c1f.png" alt="image.png" style="zoom:75%;" /> 
 
 ---
 
 > 关于binlog cache的整体写入文件系统的流程：
 >
-> ![image.png](./MySQL-3.assets/59e948728f5e4cf0ba83f1b5453f7b28.png)
+> <img src="./MySQL-3.assets/59e948728f5e4cf0ba83f1b5453f7b28.png" alt="image.png" style="zoom:70%;" /> 
 >
 > 关于binlog cache中的数据什么时候写入到磁盘，是根据配置决定的：
 >
-> ![image.png](./MySQL-3.assets/1b6766e9a6814b29b7d2547eb3ca0fac.png)
+> <img src="./MySQL-3.assets/1b6766e9a6814b29b7d2547eb3ca0fac.png" alt="image.png" style="zoom:75%;" /> 
 >
 > 整个同步的配置默认值是1，在官方也看到可以设置为0
 >
