@@ -251,7 +251,7 @@ public interface BeanDefinitionRegistry {
 
 &emsp;&emsp;也就是需要实现根据Type找到Bean对象的功能。正常的实例逻辑为：
 
-![image.png](https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1661244485026/1297dc776e044ca387c942d3a2b0468b.png)
+<img src="https://fynotefile.oss-cn-zhangjiakou.aliyuncs.com/fynote/fyfile/1462/1661244485026/1297dc776e044ca387c942d3a2b0468b.png" alt="image.png" style="zoom:70%;" />
 
 &emsp;&emsp;但是上面的实现方案有点吃性能，我们可以尝试优化下，我们可以提前把Type和Bean的对应关系找出来，然后用Map缓存起来处理。对应的存储方式通过Map来处理
 
